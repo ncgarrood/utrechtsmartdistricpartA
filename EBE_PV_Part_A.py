@@ -61,7 +61,7 @@ def compare_dni(model, true_value, predicted_value):
      print_errors(rmse,mbe,mae,r2)
      
 # Get Irrandiance (UPOT data GHI) and solar angles (Zenith and Apparent Zenith)
-UPOT_data = pd.read_csv(r"C:\Users\NCG\OneDrive\Documents\Utrecht University\Energy in Built\6.2 Photovoltaic (PV) systems, irradiance and PV performance evaluation\PVpartA\Irradiance_2015_UPOT.csv", sep = ';', index_col = "timestamp", parse_dates= True) 
+UPOT_data = pd.read_csv("Irradiance_2015_UPOT.csv", sep = ';', index_col = "timestamp", parse_dates= True) 
 #UPOT_data = UPOT_data.resample("5min").mean()
 #UPOT_data = UPOT_data.dropna()
 
@@ -116,6 +116,6 @@ knmi = knmi[[ 'Date', 'FH', 'FF', 'Temperature', 'GHI']]
 knmi['GHI_W/M2'] = pd.to_numeric(knmi.GHI) * 10000 /3600
 
 ### SUB-QUESTION 2.2
-hello
+
 #def make_surface_dict():
 
