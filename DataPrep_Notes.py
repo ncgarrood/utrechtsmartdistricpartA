@@ -20,3 +20,64 @@ Created on Thu Sep 23 11:58:15 2021
 # FF        Mean wind speed (in 0.1 m/s) during the 10-minute period preceding the time of observation	/ : Windsnelheid (in 0.1 m/s) gemiddeld over de laatste 10 minuten van het afgelopen uur / 
 # Temp      Temperature (in 0.1 degrees Celsius) at 1.50 m at the time of observation	/ : Temperatuur (in 0.1 graden Celsius) op 1.50 m hoogte tijdens de waarneming / 
 # GHI       Global radiation (in J/cm2) during the hourly division	/  Globale straling (in J/cm2) per uurvak 
+
+
+##Rooftops
+#Building C and D --> it has two rooftops South and North
+#CS 
+    #orientation (azimuth) = 180 degrees
+    #slope = 40 degrees 
+#CN
+    #orientation (azimuth) = 0 degrees
+    #slope = 40 degrees  
+#DW
+    #orientation(azimuth) = 270 degrees
+    #slope =  40 degrees
+#DE
+    #orientation (azimuth)= 90 degrees
+    #slope =  40 degrees 
+
+#Facades, A and B ((exclude façades facing North, NE & NW))
+#ASE
+    #orientation(azimuth) = 135
+    #slope = 90
+#ASW
+    #orientation(azimuth) = 225 
+    #slope = 90 
+#BE 
+    #orientation(azimuth) = 90
+    #slope = 90
+#BS
+    #orientation(azimuth) = 180
+    #slope = 90
+#BW
+    #orientation(azimuth) = 270
+    #slope = 90
+    
+ """   
+SurfaceASE - Tilt, Orientation
+SurfaceASW - Tilt, Orientation
+SurfaceBE  - Tilt, Orientation
+SurfaceBS  - Tilt, Orientation
+SurfaceBW  - Tilt, Orientation
+RoofCS     - Tilt, Orientation
+RoofCN     - Tilt, Orientation
+RoofDW     - Tilt, Orientation
+RoofDE     - Tilt, Orientation
+RoofA      - Tilt = ?, Orientation = ?
+RoofB      - Tilt = ?, Orientation = (??)
+"""
+
+###buildings = {'FacadeASE': [90,135], 'FacadeASW': [90,225], 'FacadeBE': [90,90], 'FacadeBS': [90,180], 'FacadeBW': [90,270], }
+
+tilts = [90, 90, 90, 90, 90, 40, 40, 40, 40, 0, 0]
+orientations = [135, 225, 90, 180, 270, 180, 0, 270, 90, 0, 0]
+
+
+def some_function(surface):
+    #do some stuff with the entry, for example:
+    return surface: [tilts]
+
+surfacelist=["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS", ]
+
+mydict = {x: some_function(x) for x in surfacelist}
