@@ -75,6 +75,7 @@ for model in MODELS:
     modelled_dni = find_dni(model, UPOT_data, solar_df)
     UPOT_data[model] = modelled_dni
     compare_dni(model, UPOT_data.DNI, modelled_dni)
+    
 #%%    
 ### GRAPHS for Sub-Question 3
 
@@ -116,5 +117,12 @@ knmi = knmi[[ 'Date', 'FH', 'FF', 'Temperature', 'GHI']]
 knmi['GHI_W/M2'] = pd.to_numeric(knmi.GHI) * 10000 /3600
 
 ### SUB-QUESTION 2.2
+#building a dictionary of surfaces, note 0s for surfaces we are going to calculate in next question
+tilts = [90, 90, 90, 90, 90, 40, 40, 40, 40, 0, 0]
+orientations = [135, 225, 90, 180, 270, 180, 0, 270, 90, 0, 0]
 
-#def make_surface_dict():
+buildings_list = [list(x) for x in zip(tilts, orientations)]
+keys_list = ["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS","SurfaceBW","RoofCS","RoofCN","RoofDW","RoofDE","RoofA","RoofB"]
+
+zip_iterator = zip(keys_list, buildings_list)
+buildings = dict(zip_iterator)
