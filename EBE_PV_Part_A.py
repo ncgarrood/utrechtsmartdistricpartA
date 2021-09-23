@@ -73,25 +73,23 @@ for model in ['disc', 'dirint', 'dirindex','erbs']:
     modelled_dni = find_dni(model, UPOT_data, solar_df)
     UPOT_data[model] = modelled_dni
     compare_dni(model, UPOT_data.DNI, modelled_dni)
-     
+#%%    
 ### GRAPHS for Sub-Question 3
 
-#UPOT_data = UPOT_data.resample('1 day').mean() #comebacktothis, trying to find best way to present the scatters, maybe better to just change the x axis and not the data points
-
-x = UPOT_data.index
+x = UPOT_data.DNI
 a = UPOT_data.disc
 b = UPOT_data.dirint
 c = UPOT_data.dirindex
 d = UPOT_data.erbs
 
 fig, axs = plt.subplots(2, 2)
-axs[0, 0].plot(x, a)
+axs[0, 0].scatter(x, a, s=0.001, c= 'pink')
 axs[0, 0].set_title('Disc')
-axs[0, 1].plot(x, b, 'tab:orange')
+axs[0, 1].scatter(x, b, s=0.001, c= 'deeppink')
 axs[0, 1].set_title('Dirint')
-axs[1, 0].plot(x, c, 'tab:green')
+axs[1, 0].scatter(x, c,s=0.001, c= 'hotpink')
 axs[1, 0].set_title('Dirindex')
-axs[1, 1].plot(x, d, 'tab:red')
+axs[1, 1].scatter(x, d, s=0.001, c= 'lightcoral')
 axs[1, 1].set_title('Erbs')
 
 for ax in axs.flat:
@@ -139,4 +137,3 @@ knmi['GHI_W/M2'] = pd.to_numeric(knmi.GHI) * 10000 /3600
 
 ### SUB-QUESTION 2.2
 
-#Façades of A & B (exclude façades facing North, NE & NW
