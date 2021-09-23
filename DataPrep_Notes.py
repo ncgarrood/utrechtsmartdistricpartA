@@ -54,7 +54,7 @@ Created on Thu Sep 23 11:58:15 2021
     #orientation(azimuth) = 270
     #slope = 90
     
- """   
+"""   
 SurfaceASE - Tilt, Orientation
 SurfaceASW - Tilt, Orientation
 SurfaceBE  - Tilt, Orientation
@@ -73,11 +73,12 @@ RoofB      - Tilt = ?, Orientation = (??)
 tilts = [90, 90, 90, 90, 90, 40, 40, 40, 40, 0, 0]
 orientations = [135, 225, 90, 180, 270, 180, 0, 270, 90, 0, 0]
 
+buildings = []
 
-def some_function(surface):
-    #do some stuff with the entry, for example:
-    return surface: [tilts]
+def create_building_dict(surface):
+    for value in surface:
+        buildings = tilts[] + orientations[]
 
-surfacelist=["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS", ]
+#surfacelist=["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS", ]
 
-mydict = {x: some_function(x) for x in surfacelist}
+#mydict = {x: some_function(x) for x in surfacelist}
