@@ -116,6 +116,6 @@ knmi = knmi[[ 'Date', 'FH', 'FF', 'Temperature', 'GHI']]
 knmi['GHI_W/M2'] = pd.to_numeric(knmi.GHI) * 10000 /3600
 
 ### SUB-QUESTION 2.2
-
+hello
 #def make_surface_dict():
 
