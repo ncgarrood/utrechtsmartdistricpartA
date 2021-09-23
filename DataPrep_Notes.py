@@ -54,14 +54,14 @@ Created on Thu Sep 23 11:58:15 2021
     #orientation(azimuth) = 270
     #slope = 90
     
- """   
+"""   
 SurfaceASE - Tilt, Orientation
 SurfaceASW - Tilt, Orientation
 SurfaceBE  - Tilt, Orientation
 SurfaceBS  - Tilt, Orientation
 SurfaceBW  - Tilt, Orientation
 RoofCS     - Tilt, Orientation
-RoofCN     - Tilt, Orientation
+RoofCN     - Tilt, Orientation ---- does this make sense? would you put a N-facing roof?
 RoofDW     - Tilt, Orientation
 RoofDE     - Tilt, Orientation
 RoofA      - Tilt = ?, Orientation = ?
@@ -73,11 +73,14 @@ RoofB      - Tilt = ?, Orientation = (??)
 tilts = [90, 90, 90, 90, 90, 40, 40, 40, 40, 0, 0]
 orientations = [135, 225, 90, 180, 270, 180, 0, 270, 90, 0, 0]
 
+buildings_list = [list(x) for x in zip(tilts, orientations)]
+keys_list = ["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS","SurfaceBW","RoofCS","RoofCN","RoofDW","RoofDE","RoofA","RoofB"]
 
-def some_function(surface):
-    #do some stuff with the entry, for example:
-    return surface: [tilts]
+zip_iterator = zip(keys_list, buildings_list)
+buildings = dict(zip_iterator)
 
-surfacelist=["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS", ]
+#buildings = pd.DataFrame(data = buildings_dict, index = )
 
-mydict = {x: some_function(x) for x in surfacelist}
+#surfacelist=["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS", ]
+
+#mydict = {x: some_function(x) for x in surfacelist}

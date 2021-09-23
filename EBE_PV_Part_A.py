@@ -61,7 +61,7 @@ def compare_dni(model, true_value, predicted_value):
      print_errors(rmse,mbe,mae,r2)
      
 # Get Irrandiance (UPOT data GHI) and solar angles (Zenith and Apparent Zenith)
-UPOT_data = pd.read_csv(r"C:\Users\NCG\OneDrive\Documents\Utrecht University\Energy in Built\6.2 Photovoltaic (PV) systems, irradiance and PV performance evaluation\PVpartA\Irradiance_2015_UPOT.csv", sep = ';', index_col = "timestamp", parse_dates= True) 
+UPOT_data = pd.read_csv("Irradiance_2015_UPOT.csv", sep = ';', index_col = "timestamp", parse_dates= True) 
 #UPOT_data = UPOT_data.resample("5min").mean()
 #UPOT_data = UPOT_data.dropna()
 
@@ -75,6 +75,7 @@ for model in MODELS:
     modelled_dni = find_dni(model, UPOT_data, solar_df)
     UPOT_data[model] = modelled_dni
     compare_dni(model, UPOT_data.DNI, modelled_dni)
+    
 #%%    
 ### GRAPHS for Sub-Question 3
 
@@ -116,7 +117,12 @@ knmi = knmi[[ 'Date', 'FH', 'FF', 'Temperature', 'GHI']]
 knmi['GHI_W/M2'] = pd.to_numeric(knmi.GHI) * 10000 /3600
 
 ### SUB-QUESTION 2.2
-hello
-#def make_surface_dict():
+#building a dictionary of surfaces, note 0s for surfaces we are going to calculate in next question
+tilts = [90, 90, 90, 90, 90, 40, 40, 40, 40, 0, 0]
+orientations = [135, 225, 90, 180, 270, 180, 0, 270, 90, 0, 0]
 
-test3
+buildings_list = [list(x) for x in zip(tilts, orientations)]
+keys_list = ["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS","SurfaceBW","RoofCS","RoofCN","RoofDW","RoofDE","RoofA","RoofB"]
+
+zip_iterator = zip(keys_list, buildings_list)
+buildings = dict(zip_iterator)
