@@ -37,7 +37,7 @@ def find_dni(model, ghi, solar_position):
     if model == 'dirindex':
         relative_airmass = pvlib.atmosphere.get_relative_airmass(apparent_zenith)
         absolute_airmass = pvlib.atmosphere.get_absolute_airmass(relative_airmass)
-        linke_turbidity = pvlib.clearsky.lookup_linke_turbidity(time, latitude, longitude)
+        linke_turbidity = pvlib.clearsky.lookup_linke_turbidity(time, latitude_UU, longitude_UU)
         clearsky = pvlib.clearsky.ineichen(apparent_zenith, absolute_airmass, linke_turbidity, perez_enhancement=True)
         return pvlib.irradiance.dirindex(ghi, clearsky['ghi'], clearsky['dni'], zenith=zenith, times=time)
     if model == 'erbs':
@@ -65,7 +65,7 @@ UPOT_data = pd.read_csv("Irradiance_2015_UPOT.csv", sep = ';', index_col = "time
 #UPOT_data = UPOT_data.resample("5min").mean()
 #UPOT_data = UPOT_data.dropna()
 
-solar_df = pvlib.solarposition.ephemeris(UPOT_data.index, latitude, longitude, temperature= UPOT_data["temp_air"])
+solar_df = pvlib.solarposition.ephemeris(UPOT_data.index, latitude_UU, longitude_UU, temperature= UPOT_data["temp_air"])
 solar_df= solar_df[solar_df.elevation > 4] #hours when enough sun to not be neglible generation, avoiding inf values in dirindex later
 
 UPOT_data = UPOT_data[UPOT_data.index.isin(solar_df.index)]
@@ -94,27 +94,24 @@ for index, model in enumerate(MODELS):
 #%%
 """ Question 2 - Irradiance on building surfaces """
 
-knmi = pd.read_csv('knmi_ij_sch_vlie_vlis_rott_maas.csv', index_col = "STN", sep = ';',  parse_dates = True)
-    #set empty rows to NaN
-knmi = knmi.replace(r'\s+', np.nan, regex = True)
-    #delete all rows with NaN
-knmi = knmi.dropna()
-    #change column names
-knmi = knmi.rename({"H": "Hour", knmi.columns[4]: "Temperature", knmi.columns[5]: "GHI", knmi.columns[2]: "FH", knmi.columns[3]: "FF"  }, axis = 'columns')
+kmni_data = pd.read_csv('knmi.txt')
+del kmni_data['# STN']
+kmni_data.columns = ['date', 'HH', 'wind', 'temp', 'ghi']
+kmni_data.date = kmni_data.date.astype(str)
+kmni_data.HH = kmni_data.HH.apply( lambda x: str(x).zfill(2))
+kmni_data.HH = kmni_data.HH.replace('24', '00')
 
-#keep rows of certain STN value
-knmi = knmi.loc[(knmi.index == 240)] #keep data coming from weather station Schiphol. 
+kmni_data['datetime'] = kmni_data.date + kmni_data.HH + '00'
+kmni_data.datetime = pd.to_datetime( kmni_data.datetime, format = '%Y%m%d%H%M')
+kmni_data.index = kmni_data.datetime
+kmni_data = kmni_data[['wind', 'temp', 'ghi']]
 
-#resample time
-    #add a column with corresponding date time from 1/1/2019 01:00:00 (because dataset starts with Hour 1), of extent of the datafrime and per hourly frequency. 
-knmi['Date'] = pd.date_range(start = '1/1/2019 01:00:00', periods = len(knmi), freq = 'H')
-    #remove the YYMMDD and Hour columns from dataframe 
-knmi = knmi.drop(['YYYYMMDD', 'Hour'], axis = 1)
-    #put the 'date' column at the first place in the dataframe
-knmi = knmi[[ 'Date', 'FH', 'FF', 'Temperature', 'GHI']]   
+kmni_data.ghi = kmni_data.ghi * 2.77778
+kmni_data.temp = kmni_data.temp / 10
+kmni_data.wind = kmni_data.wind / 10
 
-#change GHI from j/cm2 per  hour to W/m2
-knmi['GHI_W/M2'] = pd.to_numeric(knmi.GHI) * 10000 /3600
+kmni_data.index = kmni_data.index.tz_localize('UTC')
+
 
 ### SUB-QUESTION 2.2
 #building a dictionary of surfaces, note 0s for surfaces we are going to calculate in next question
@@ -126,3 +123,53 @@ keys_list = ["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS","SurfaceBW","Roof
 
 zip_iterator = zip(keys_list, buildings_list)
 buildings = dict(zip_iterator)
+
+###SUB-QUESTION 2.3
+
+def find_dni_eind(model, ghi, solar_position):
+    """Return a DNI series based on the model, ghi, and solar position"""
+    time = kmni_data.index
+    ghi = kmni_data.ghi
+    zenith = solarangles_Eind['zenith']
+    apparent_zenith = solarangles_Eind['apparent_zenith']
+    
+    if model == 'dirindex':
+        relative_airmass = pvlib.atmosphere.get_relative_airmass(apparent_zenith)
+        absolute_airmass = pvlib.atmosphere.get_absolute_airmass(relative_airmass)
+        linke_turbidity = pvlib.clearsky.lookup_linke_turbidity(time, lat_Eind , lon_Eind)
+        clearsky = pvlib.clearsky.ineichen(apparent_zenith, absolute_airmass, linke_turbidity, perez_enhancement=True)
+        return pvlib.irradiance.dirindex(ghi, clearsky['ghi'], clearsky['dni'], zenith=zenith, times=time)
+    raise Exception('Invalid model')
+
+#Location Station
+lat_Eind = 51.451
+lon_Eind = 5.377
+
+# Calculate Eindoven Solar Zenith
+solarangles_Eind = pvlib.solarposition.ephemeris(kmni_data.index, lat_Eind, lon_Eind, kmni_data.temp)
+solarangles_Eind = solarangles_Eind[solarangles_Eind > 4]
+kmni_data = kmni_data[kmni_data.index.isin(solarangles_Eind.index)]
+kmni_data = kmni_data.dropna()
+#solarangles_Eind = solarangles_Eind[solarangles_Eind.index.isin(kmni_data.index)]
+#kmni_data = kmni_data[kmni_data.index.isin(solarangles_Eind.index)]
+
+#Calculate Eindhoven DNI using the dirindex model 
+modelled_dni_Eind = find_dni_eind('dirindex', kmni_data, solarangles_Eind)
+kmni_data['dni'] = modelled_dni_Eind
+kmni_data = kmni_data.dropna()
+
+#Calculate DHI from DNI
+DHIEind = kmni_data.ghi - np.cos(solarangles_Eind.zenith/180*np.pi)*kmni_data['dni'] 
+kmni_data['dhi'] = DHIEind
+
+#Calculate the POAs
+surface = pd.read_csv('Surfaceparameters.csv', index_col = 'Surface')
+
+POAtotal = pd.DataFrame(index=kmni_data.index, columns = surface.index)
+POAdirect = pd.DataFrame(index=kmni_data.index, columns = surface.index)
+POAdiffuse = pd.DataFrame(index=kmni_data.index, columns = surface.index)
+
+for i in surface.index:
+    POAtotal[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles.zenith, solarangles.azimuth, DNIEind, data.ghi, DHIEind)['poa_global']
+    POAdirect[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles.zenith, solarangles.azimuth, DNIEind, data.ghi, DHIEind)['poa_direct']
+    POAdiffuse[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles.zenith, solarangles.azimuth, DNIEind, data.ghi, DHIEind)['poa_diffuse']
