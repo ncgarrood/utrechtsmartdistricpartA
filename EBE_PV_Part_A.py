@@ -18,7 +18,7 @@ from sklearn.metrics import r2_score
 """ Question 1 - Model Testing """
 
 # Location
-latitude, longitude = 52.08746136865645, 5.168080610130638 # used long/lat from googlemaps for uithof
+latitude_UU, longitude_UU = 52.08746136865645, 5.168080610130638 # used long/lat from googlemaps for uithof
 
 MODELS = ['disc', 'dirint', 'dirindex','erbs']
 
