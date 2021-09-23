@@ -20,6 +20,8 @@ from sklearn.metrics import r2_score
 # Location
 latitude, longitude = 52.08746136865645, 5.168080610130638 # used long/lat from googlemaps for uithof
 
+MODELS = ['disc', 'dirint', 'dirindex','erbs']
+
 # Functions
 def find_dni(model, ghi, solar_position):
     """Return a DNI series based on the model, ghi, and solar position"""
@@ -69,31 +71,23 @@ solar_df= solar_df[solar_df.elevation > 4] #hours when enough sun to not be negl
 UPOT_data = UPOT_data[UPOT_data.index.isin(solar_df.index)]
 
 #Calculate the Models and compare to observed GHIs from UPOT dataset
-for model in ['disc', 'dirint', 'dirindex','erbs']:
+for model in MODELS:
     modelled_dni = find_dni(model, UPOT_data, solar_df)
     UPOT_data[model] = modelled_dni
     compare_dni(model, UPOT_data.DNI, modelled_dni)
 #%%    
 ### GRAPHS for Sub-Question 3
 
-x = UPOT_data.DNI
-a = UPOT_data.disc
-b = UPOT_data.dirint
-c = UPOT_data.dirindex
-d = UPOT_data.erbs
-
 fig, axs = plt.subplots(2, 2)
-axs[0, 0].scatter(x, a, s=0.001, c= 'pink')
-axs[0, 0].set_title('Disc')
-axs[0, 1].scatter(x, b, s=0.001, c= 'deeppink')
-axs[0, 1].set_title('Dirint')
-axs[1, 0].scatter(x, c,s=0.001, c= 'hotpink')
-axs[1, 0].set_title('Dirindex')
-axs[1, 1].scatter(x, d, s=0.001, c= 'lightcoral')
-axs[1, 1].set_title('Erbs')
+#formatting
+fig.subplots_adjust(wspace = 0.2, hspace = 0.3)
 
-for ax in axs.flat:
-    ax.set(xlabel='Time', ylabel='DNI Value [W/m2]')
+for index, model in enumerate(MODELS):
+    subplot = axs[index//2][index % 2]
+    subplot.scatter(UPOT_data.DNI, UPOT_data[model], s=0.0005, c= 'lightcoral')
+    subplot.set_title(model.upper())
+    subplot.set(xlabel='True DNI [W/m2]', ylabel='Modelled DNI [W/m2]')
+    subplot.plot([0,999],[0,999], c = 'gray', linewidth = 1)
 
 
 #%%
