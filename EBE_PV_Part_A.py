@@ -166,3 +166,20 @@ for i in surface.index:
     POAtotal[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_global']
     POAdirect[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_direct']
     POAdiffuse[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_diffuse']
+
+### SUB-QUESTION 2.4 - SLOPE B
+TiltB = [10, 15, 20, 25, 30, 35, 40, 45] #slope of building B in degrees
+OrientationB = 180 #facing south
+
+POAtotalB = pd.DataFrame(index=knmi_data.index)
+POAdirectB = pd.DataFrame(index=knmi_data.index)
+POAdiffuseB = pd.DataFrame(index=knmi_data.index)
+
+for i in range(len(TiltB)):
+    POAtotalB[i] = pvlib.irradiance.get_total_irradiance(TiltB[i], OrientationB, solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_global']
+    POAdirectB[i] = pvlib.irradiance.get_total_irradiance(TiltB[i], OrientationB, solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_direct']
+    POAdiffuseB[i] = pvlib.irradiance.get_total_irradiance(TiltB[i], OrientationB, solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_diffuse']
+
+POAtotalB.columns = TiltB
+POAdirectB.columns = TiltB
+POAdiffuseB.columns = TiltB
