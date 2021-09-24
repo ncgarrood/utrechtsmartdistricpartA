@@ -183,3 +183,49 @@ for i in range(len(TiltB)):
 POAtotalB.columns = TiltB
 POAdirectB.columns = TiltB
 POAdiffuseB.columns = TiltB
+
+### SUB-QUESTION 2.4 - SLOPE A
+TiltA = [10, 15, 20, 25, 30, 35, 40, 45] #slope of building A in degrees
+OrientationA135 = 135 #facing southeast
+OrientationA225 = 225 #facing southwest
+
+POAtotalA135 = pd.DataFrame(index=knmi_data.index)
+POAdirectA135 = pd.DataFrame(index=knmi_data.index)
+POAdiffuseA135 = pd.DataFrame(index=knmi_data.index)
+
+for i in range(len(TiltA)):
+    POAtotalA135[i] = pvlib.irradiance.get_total_irradiance(TiltA[i], OrientationA135, solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_global']
+    POAdirectA135[i] = pvlib.irradiance.get_total_irradiance(TiltA[i], OrientationA135, solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_direct']
+    POAdiffuseA135[i] = pvlib.irradiance.get_total_irradiance(TiltA[i], OrientationA135, solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_diffuse']
+
+POAtotalA135.columns = TiltA
+POAdirectA135.columns = TiltA
+POAdiffuseA135.columns = TiltA
+
+POAtotalA225 = pd.DataFrame(index=knmi_data.index)
+POAdirectA225 = pd.DataFrame(index=knmi_data.index)
+POAdiffuseA225 = pd.DataFrame(index=knmi_data.index)
+
+for i in range(len(TiltA)):
+    POAtotalA225[i] = pvlib.irradiance.get_total_irradiance(TiltA[i], OrientationA225, solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_global']
+    POAdirectA225[i] = pvlib.irradiance.get_total_irradiance(TiltA[i], OrientationA225, solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_direct']
+    POAdiffuseA225[i] = pvlib.irradiance.get_total_irradiance(TiltA[i], OrientationA225, solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_diffuse']
+
+POAtotalA225.columns = TiltA
+POAdirectA225.columns = TiltA
+POAdiffuseA225.columns = TiltA
+
+### SUB-QUESTION 2.4 - BAR CHART
+POAtotalB.columns=['ten', 'fifteen', 'twenty', 'twentyfive', 'thirty', 'thirtyfive', 'fourty', 'fourtyfive']
+POAtotalA135.columns=['ten', 'fifteen', 'twenty', 'twentyfive', 'thirty', 'thirtyfive', 'fourty', 'fourtyfive']
+POAtotalA225.columns=['ten', 'fifteen', 'twenty', 'twentyfive', 'thirty', 'thirtyfive', 'fourty', 'fourtyfive']
+
+x = ['total']
+POAB_sum = pd.DataFrame(index = x, columns = TiltB)
+POAB_sum.columns = ['ten', 'fifteen', 'twenty', 'twentyfive', 'thirty', 'thirtyfive', 'fourty', 'fourtyfive']
+
+for i in POAtotalB[i]:
+    POAB_sum[i] = sum(POAtotalB[i])
+
+
+#POAtotalB = POAtotalB[['ten', 'fifteen', 'twenty', 'twentyfive', 'thirty', 'thirtyfive', 'fourty', 'fourtyfive']]
