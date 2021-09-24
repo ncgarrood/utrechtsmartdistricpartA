@@ -7,6 +7,35 @@ Created on Thu Sep 23 12:18:30 2021
 
 // Rooftops of C & D
 // Façades of A & B (exclude façades facing North, NE & NW)
-
+def find_dni(model, ghi, solar_position, input_data):
+    """Return a DNI series based on the model, ghi, and solar position"""
+    if input_data == "UPOT":
+        time = UPOT_data.index
+        ghi = UPOT_data.GHI
+        zenith = solar_df['zenith']
+        apparent_zenith = solar_df['apparent_zenith']
+        latitude = lat_UU
+        longitude = long_UU
+    if input_data == "KMNI_EIND":
+        time = kmni_data.index
+        ghi = kmni_data.ghi
+        zenith = solarangles_Eind['zenith']
+        apparent_zenith = solarangles_Eind['apparent_zenith']
+        latitude = lat_Eind
+        longitude = long_Eind
+   
+    if model == 'disc':
+        return pvlib.irradiance.disc(ghi, zenith, time).dni
+    if model == 'dirint':
+        return pvlib.irradiance.dirint(ghi, zenith, time)
+    if model == 'dirindex':
+        relative_airmass = pvlib.atmosphere.get_relative_airmass(apparent_zenith)
+        absolute_airmass = pvlib.atmosphere.get_absolute_airmass(relative_airmass)
+        linke_turbidity = pvlib.clearsky.lookup_linke_turbidity(time, latitude, longitude)
+        clearsky = pvlib.clearsky.ineichen(apparent_zenith, absolute_airmass, linke_turbidity, perez_enhancement=True)
+        return pvlib.irradiance.dirindex(ghi, clearsky['ghi'], clearsky['dni'], zenith=zenith, times=time)
+    if model == 'erbs':
+        return pvlib.irradiance.erbs(ghi, zenith, time).dni
+    raise Exception('Invalid model')
 
 
