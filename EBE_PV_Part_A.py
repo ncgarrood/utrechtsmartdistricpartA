@@ -17,19 +17,30 @@ from sklearn.metrics import r2_score
 
 """ Question 1 - Model Testing """
 
-# Location
-latitude_UU, longitude_UU = 52.08746136865645, 5.168080610130638 # used long/lat from googlemaps for uithof
+# Locations
+lat_UU, long_UU = 52.08746136865645, 5.168080610130638 # used long/lat from googlemaps for uithof
+lat_Eind, long_Eind = 51.451, 5.377
 
 MODELS = ['disc', 'dirint', 'dirindex','erbs']
 
 # Functions
-def find_dni(model, ghi, solar_position):
+def find_dni(model, ghi, solar_position, input_data):
     """Return a DNI series based on the model, ghi, and solar position"""
-    time = UPOT_data.index
-    ghi = UPOT_data.GHI
-    zenith = solar_df['zenith']
-    apparent_zenith = solar_df['apparent_zenith']
-    
+    if input_data == "UPOT":
+        time = UPOT_data.index
+        ghi = UPOT_data.GHI
+        zenith = solar_df['zenith']
+        apparent_zenith = solar_df['apparent_zenith']
+        latitude = lat_UU
+        longitude = long_UU
+    if input_data == "KMNI_EIND":
+        time = kmni_data.index
+        ghi = kmni_data.ghi
+        zenith = solarangles_Eind['zenith']
+        apparent_zenith = solarangles_Eind['apparent_zenith']
+        latitude = lat_Eind
+        longitude = long_Eind
+   
     if model == 'disc':
         return pvlib.irradiance.disc(ghi, zenith, time).dni
     if model == 'dirint':
@@ -37,7 +48,7 @@ def find_dni(model, ghi, solar_position):
     if model == 'dirindex':
         relative_airmass = pvlib.atmosphere.get_relative_airmass(apparent_zenith)
         absolute_airmass = pvlib.atmosphere.get_absolute_airmass(relative_airmass)
-        linke_turbidity = pvlib.clearsky.lookup_linke_turbidity(time, latitude_UU, longitude_UU)
+        linke_turbidity = pvlib.clearsky.lookup_linke_turbidity(time, latitude, longitude)
         clearsky = pvlib.clearsky.ineichen(apparent_zenith, absolute_airmass, linke_turbidity, perez_enhancement=True)
         return pvlib.irradiance.dirindex(ghi, clearsky['ghi'], clearsky['dni'], zenith=zenith, times=time)
     if model == 'erbs':
@@ -65,14 +76,14 @@ UPOT_data = pd.read_csv("Irradiance_2015_UPOT.csv", sep = ';', index_col = "time
 #UPOT_data = UPOT_data.resample("5min").mean()
 #UPOT_data = UPOT_data.dropna()
 
-solar_df = pvlib.solarposition.ephemeris(UPOT_data.index, latitude_UU, longitude_UU, temperature= UPOT_data["temp_air"])
+solar_df = pvlib.solarposition.ephemeris(UPOT_data.index, lat_UU, long_UU, temperature= UPOT_data["temp_air"])
 solar_df= solar_df[solar_df.elevation > 4] #hours when enough sun to not be neglible generation, avoiding inf values in dirindex later
 
 UPOT_data = UPOT_data[UPOT_data.index.isin(solar_df.index)]
 
 #Calculate the Models and compare to observed GHIs from UPOT dataset
 for model in MODELS:
-    modelled_dni = find_dni(model, UPOT_data, solar_df)
+    modelled_dni = find_dni(model, UPOT_data, solar_df, 'UPOT')
     UPOT_data[model] = modelled_dni
     compare_dni(model, UPOT_data.DNI, modelled_dni)
     
@@ -126,41 +137,24 @@ buildings = dict(zip_iterator)
 
 ###SUB-QUESTION 2.3
 
-def find_dni_eind(model, ghi, solar_position):
-    """Return a DNI series based on the model, ghi, and solar position"""
-    time = kmni_data.index
-    ghi = kmni_data.ghi
-    zenith = solarangles_Eind['zenith']
-    apparent_zenith = solarangles_Eind['apparent_zenith']
-    
-    if model == 'dirindex':
-        relative_airmass = pvlib.atmosphere.get_relative_airmass(apparent_zenith)
-        absolute_airmass = pvlib.atmosphere.get_absolute_airmass(relative_airmass)
-        linke_turbidity = pvlib.clearsky.lookup_linke_turbidity(time, lat_Eind , lon_Eind)
-        clearsky = pvlib.clearsky.ineichen(apparent_zenith, absolute_airmass, linke_turbidity, perez_enhancement=True)
-        return pvlib.irradiance.dirindex(ghi, clearsky['ghi'], clearsky['dni'], zenith=zenith, times=time)
-    raise Exception('Invalid model')
-
-#Location Station
-lat_Eind = 51.451
-lon_Eind = 5.377
-
 # Calculate Eindoven Solar Zenith
-solarangles_Eind = pvlib.solarposition.ephemeris(kmni_data.index, lat_Eind, lon_Eind, kmni_data.temp)
+solarangles_Eind = pvlib.solarposition.ephemeris(kmni_data.index, lat_Eind, long_Eind, kmni_data.temp)
 solarangles_Eind = solarangles_Eind[solarangles_Eind > 4]
-kmni_data = kmni_data[kmni_data.index.isin(solarangles_Eind.index)]
+
 kmni_data = kmni_data.dropna()
-#solarangles_Eind = solarangles_Eind[solarangles_Eind.index.isin(kmni_data.index)]
-#kmni_data = kmni_data[kmni_data.index.isin(solarangles_Eind.index)]
+solarangles_Eind = solarangles_Eind[solarangles_Eind.index.isin(kmni_data.index)]
+kmni_data = kmni_data[kmni_data.index.isin(solarangles_Eind.index)]
 
 #Calculate Eindhoven DNI using the dirindex model 
-modelled_dni_Eind = find_dni_eind('dirindex', kmni_data, solarangles_Eind)
+modelled_dni_Eind = find_dni('dirindex', kmni_data, solarangles_Eind, "KMNI_EIND")
 kmni_data['dni'] = modelled_dni_Eind
-kmni_data = kmni_data.dropna()
+#kmni_data = kmni_data.dropna(axis=0, how='any')
 
 #Calculate DHI from DNI
-DHIEind = kmni_data.ghi - np.cos(solarangles_Eind.zenith/180*np.pi)*kmni_data['dni'] 
-kmni_data['dhi'] = DHIEind
+#DHIEind = kmni_data.ghi - np.cos(solarangles_Eind.zenith/180*np.pi)*kmni_data['dni'] 
+#kmni_data['dhi'] = DHIEind
+
+#%%
 
 #Calculate the POAs
 surface = pd.read_csv('Surfaceparameters.csv', index_col = 'Surface')
