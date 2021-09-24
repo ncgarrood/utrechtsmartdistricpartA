@@ -167,7 +167,7 @@ for i in surface.index:
     POAdirect[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_direct']
     POAdiffuse[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_diffuse']
 
-### SUB-QUESTION 2.4
+### SUB-QUESTION 2.4 - SLOPE B
 TiltB = [10, 15, 20, 25, 30, 35, 40, 45] #slope of building B in degrees
 OrientationB = 180 #facing south
 
