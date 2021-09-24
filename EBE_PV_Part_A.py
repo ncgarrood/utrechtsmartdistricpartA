@@ -146,11 +146,7 @@ solarangles_Eind = solarangles_Eind[solarangles_Eind.index.isin(knmi_data.index)
 knmi_data = knmi_data[knmi_data.index.isin(solarangles_Eind.index)]
 
 #Calculate Eindhoven DNI using the dirindex model 
-<<<<<<< HEAD
 modelled_dni_Eind = find_dni('dirindex', knmi_data, solarangles_Eind, "KMNI_EIND")
-=======
-modelled_dni_Eind = find_dni('dirindex', knmi_data, solarangles_Eind, "KNMI_EIND")
->>>>>>> 949b6d68079cd753d4f5fd85bc8646e0e4afe3c8
 knmi_data['dni'] = modelled_dni_Eind
 #kmni_data = kmni_data.dropna(axis=0, how='any')
 
@@ -167,12 +163,6 @@ POAdirect = pd.DataFrame(index=knmi_data.index, columns = surface.index)
 POAdiffuse = pd.DataFrame(index=knmi_data.index, columns = surface.index)
 
 for i in surface.index:
-<<<<<<< HEAD
     POAtotal[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_global']
     POAdirect[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_direct']
     POAdiffuse[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_diffuse']
-=======
-    POAtotal[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solar_df.azimuth, DNIEind, knmi_data.ghi, DHIEind)['poa_global']
-    POAdirect[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solar_df.azimuth, DNIEind, knmi_data.ghi, DHIEind)['poa_direct']
-    POAdiffuse[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solaranles_Eind.zenith, solar_df.azimuth, DNIEind, knmi_data.ghi, DHIEind)['poa_diffuse']
->>>>>>> 949b6d68079cd753d4f5fd85bc8646e0e4afe3c8
