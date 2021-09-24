@@ -33,7 +33,7 @@ def find_dni(model, ghi, solar_position, input_data):
         apparent_zenith = solar_df['apparent_zenith']
         latitude = lat_UU
         longitude = long_UU
-    if input_data == "KMNI_EIND":
+    if input_data == "KNMI_EIND":
         time = knmi_data.index
         ghi = knmi_data.ghi
         zenith = solarangles_Eind['zenith']
@@ -146,9 +146,9 @@ solarangles_Eind = solarangles_Eind[solarangles_Eind.index.isin(knmi_data.index)
 knmi_data = knmi_data[knmi_data.index.isin(solarangles_Eind.index)]
 
 #Calculate Eindhoven DNI using the dirindex model 
-modelled_dni_Eind = find_dni('dirindex', knmi_data, solarangles_Eind, "KMNI_EIND")
+modelled_dni_Eind = find_dni('dirindex', knmi_data, solarangles_Eind, "KNMI_EIND")
 knmi_data['dni'] = modelled_dni_Eind
-#kmni_data = kmni_data.dropna(axis=0, how='any')
+knmi_data = knmi_data.dropna(axis=0, how='any')
 
 #Calculate DHI from DNI
 DHIEind = knmi_data.ghi - np.cos(solarangles_Eind.zenith/180*np.pi)*knmi_data['dni'] 
