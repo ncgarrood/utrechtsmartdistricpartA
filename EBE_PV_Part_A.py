@@ -17,15 +17,16 @@ from sklearn.metrics import r2_score
 
 """ Question 1 - Model Testing """
 
-# Locations
+# Location
 lat_UU, long_UU = 52.08746136865645, 5.168080610130638 # used long/lat from googlemaps for uithof
 lat_Eind, long_Eind = 51.451, 5.377
 
 MODELS = ['disc', 'dirint', 'dirindex','erbs']
 
 # Functions
-def find_dni(model, ghi, solar_position, input_data):
+def find_dni(model, ghi, solar_position):
     """Return a DNI series based on the model, ghi, and solar position"""
+
     if input_data == "UPOT":
         time = UPOT_data.index
         ghi = UPOT_data.GHI
@@ -41,6 +42,7 @@ def find_dni(model, ghi, solar_position, input_data):
         latitude = lat_Eind
         longitude = long_Eind
    
+
     if model == 'disc':
         return pvlib.irradiance.disc(ghi, zenith, time).dni
     if model == 'dirint':
@@ -76,14 +78,14 @@ UPOT_data = pd.read_csv("Irradiance_2015_UPOT.csv", sep = ';', index_col = "time
 #UPOT_data = UPOT_data.resample("5min").mean()
 #UPOT_data = UPOT_data.dropna()
 
-solar_df = pvlib.solarposition.ephemeris(UPOT_data.index, lat_UU, long_UU, temperature= UPOT_data["temp_air"])
+solar_df = pvlib.solarposition.ephemeris(UPOT_data.index, latitude, longitude, temperature= UPOT_data["temp_air"])
 solar_df= solar_df[solar_df.elevation > 4] #hours when enough sun to not be neglible generation, avoiding inf values in dirindex later
 
 UPOT_data = UPOT_data[UPOT_data.index.isin(solar_df.index)]
 
 #Calculate the Models and compare to observed GHIs from UPOT dataset
 for model in MODELS:
-    modelled_dni = find_dni(model, UPOT_data, solar_df, 'UPOT')
+    modelled_dni = find_dni(model, UPOT_data, solar_df)
     UPOT_data[model] = modelled_dni
     compare_dni(model, UPOT_data.DNI, modelled_dni)
     
@@ -105,62 +107,63 @@ for index, model in enumerate(MODELS):
 #%%
 """ Question 2 - Irradiance on building surfaces """
 
-knmi_data = pd.read_csv('knmi.txt')
-del knmi_data['# STN']
-knmi_data.columns = ['date', 'HH', 'wind', 'temp', 'ghi']
-knmi_data.date = knmi_data.date.astype(str)
-knmi_data.HH = knmi_data.HH.apply( lambda x: str(x).zfill(2))
-knmi_data.HH = knmi_data.HH.replace('24', '00')
+surface = pd.read_csv('Surfaceparameters.csv', index_col = 'Surface')
 
-knmi_data['datetime'] = knmi_data.date + knmi_data.HH + '00'
-knmi_data.datetime = pd.to_datetime( knmi_data.datetime, format = '%Y%m%d%H%M')
-knmi_data.index = knmi_data.datetime
-knmi_data = knmi_data[['wind', 'temp', 'ghi']]
+data = pd.read_csv('knmi.txt')
+del data['# STN']
+data.columns = ['date', 'HH', 'wind', 'temp', 'ghi']
+data.date = data.date.astype(str)
+data.HH = data.HH.apply( lambda x: str(x).zfill(2))
+data.HH = data.HH.replace('24', '00')
 
-knmi_data.ghi = knmi_data.ghi * 2.77778
-knmi_data.temp = knmi_data.temp / 10
-knmi_data.wind = knmi_data.wind / 10
+data['datetime'] = data.date + data.HH + '00'
+data.datetime = pd.to_datetime( data.datetime, format = '%Y%m%d%H%M')
+data.index = data.datetime
+data = data[['wind', 'temp', 'ghi']]
 
-knmi_data.index = knmi_data.index.tz_localize('UTC')
+data.ghi = data.ghi * 2.77778
+data.temp = data.temp / 10
+data.wind = data.wind / 10
 
+data.index = data.index.tz_localize('UTC')
 
-### SUB-QUESTION 2.2
-#building a dictionary of surfaces, note 0s for surfaces we are going to calculate in next question
-tilts = [90, 90, 90, 90, 90, 40, 40, 40, 40, 0, 0]
-orientations = [135, 225, 90, 180, 270, 180, 0, 270, 90, 0, 0]
+data.to_csv('Assignment2.csv')
 
-buildings_list = [list(x) for x in zip(tilts, orientations)]
-keys_list = ["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS","SurfaceBW","RoofCS","RoofCN","RoofDW","RoofDE","RoofA","RoofB"]
+# parameters
+lat_Eind = 51.451
+lon_Eind = 5.377
+pi = 3.14159265359
 
-zip_iterator = zip(keys_list, buildings_list)
-buildings = dict(zip_iterator)
-
-###SUB-QUESTION 2.3
-
-# Calculate Eindoven Solar Zenith
-solarangles_Eind = pvlib.solarposition.ephemeris(knmi_data.index, lat_Eind, long_Eind, knmi_data.temp)
-solarangles_Eind = solarangles_Eind[solarangles_Eind > 4]
-
-knmi_data = knmi_data.dropna()
-solarangles_Eind = solarangles_Eind[solarangles_Eind.index.isin(knmi_data.index)]
-knmi_data = knmi_data[knmi_data.index.isin(solarangles_Eind.index)]
+# solar Zenith
+solarangles = pvlib.solarposition.ephemeris(data.index, lat_Eind, lon_Eind, data.temp)
+solarangles = solarangles[solarangles.index.isin(data.index)]
 
 #Calculate Eindhoven DNI using the dirindex model 
 modelled_dni_Eind = find_dni('dirindex', knmi_data, solarangles_Eind, "KNMI_EIND")
 knmi_data['dni'] = modelled_dni_Eind
 knmi_data = knmi_data.dropna(axis=0, how='any')
 
-#Calculate DHI from DNI
-DHIEind = knmi_data.ghi - np.cos(solarangles_Eind.zenith/180*np.pi)*knmi_data['dni'] 
-knmi_data['dhi'] = DHIEind
 
+## model 3 (dirindex)
+AMR = pvlib.atmosphere.get_relative_airmass(solarangles.zenith, model='kastenyoung1989')
+AMM = pvlib.atmosphere.get_absolute_airmass(AMR)
+linkeTurb = pvlib.clearsky.lookup_linke_turbidity(data.index, lat_Eind, lon_Eind)
+clearsky = pvlib.clearsky.ineichen(solarangles.apparent_zenith, AMM, linkeTurb)
+clearsky = clearsky.dropna()
+clearsky = clearsky[clearsky.index.isin(data.index)]
+DNIEind = pvlib.irradiance.dirindex(data.ghi, clearsky.ghi, clearsky.dni, solarangles.zenith, data.index)
+DNIEind = DNIEind.dropna()
+DNIEind = DNIEind[DNIEind.index.isin(data.index)]
+data = data[data.index.isin(DNIEind.index)]
 
-#Calculate the POAs
-surface = pd.read_csv('Surfaceparameters.csv', index_col = 'Surface')
+DHIEind = data.ghi - np.cos(solarangles.zenith/180*pi)*DNIEind
 
-POAtotal = pd.DataFrame(index=knmi_data.index, columns = surface.index)
-POAdirect = pd.DataFrame(index=knmi_data.index, columns = surface.index)
-POAdiffuse = pd.DataFrame(index=knmi_data.index, columns = surface.index)
+#CS_tilt = 40
+#CS_azimuth = 180
+
+POAtotal = pd.DataFrame(index=data.index, columns = surface.index)
+POAdirect = pd.DataFrame(index=data.index, columns = surface.index)
+POAdiffuse = pd.DataFrame(index=data.index, columns = surface.index)
 
 for i in surface.index:
     POAtotal[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_global']
@@ -183,3 +186,4 @@ for i in range(len(TiltB)):
 POAtotalB.columns = TiltB
 POAdirectB.columns = TiltB
 POAdiffuseB.columns = TiltB
+
