@@ -190,3 +190,10 @@ for i in range(len(TiltB)):
 POAtotalB.columns = TiltB
 POAdirectB.columns = TiltB
 POAdiffuseB.columns = TiltB
+
+
+
+""" Question 3 - PV performance modelling """
+
+ModuleParameters = pd.read_csv("ModuleParameters.csv", index_col = 'Parameters')
+
