@@ -34,8 +34,8 @@ def find_dni(model, ghi, solar_position, input_data):
         latitude = lat_UU
         longitude = long_UU
     if input_data == "KMNI_EIND":
-        time = kmni_data.index
-        ghi = kmni_data.ghi
+        time = knmi_data.index
+        ghi = knmi_data.ghi
         zenith = solarangles_Eind['zenith']
         apparent_zenith = solarangles_Eind['apparent_zenith']
         latitude = lat_Eind
