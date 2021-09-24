@@ -34,8 +34,8 @@ def find_dni(model, ghi, solar_position, input_data):
         latitude = lat_UU
         longitude = long_UU
     if input_data == "KMNI_EIND":
-        time = kmni_data.index
-        ghi = kmni_data.ghi
+        time = knmi_data.index
+        ghi = knmi_data.ghi
         zenith = solarangles_Eind['zenith']
         apparent_zenith = solarangles_Eind['apparent_zenith']
         latitude = lat_Eind
@@ -105,23 +105,23 @@ for index, model in enumerate(MODELS):
 #%%
 """ Question 2 - Irradiance on building surfaces """
 
-kmni_data = pd.read_csv('knmi.txt')
-del kmni_data['# STN']
-kmni_data.columns = ['date', 'HH', 'wind', 'temp', 'ghi']
-kmni_data.date = kmni_data.date.astype(str)
-kmni_data.HH = kmni_data.HH.apply( lambda x: str(x).zfill(2))
-kmni_data.HH = kmni_data.HH.replace('24', '00')
+knmi_data = pd.read_csv('knmi.txt')
+del knmi_data['# STN']
+knmi_data.columns = ['date', 'HH', 'wind', 'temp', 'ghi']
+knmi_data.date = knmi_data.date.astype(str)
+knmi_data.HH = knmi_data.HH.apply( lambda x: str(x).zfill(2))
+knmi_data.HH = knmi_data.HH.replace('24', '00')
 
-kmni_data['datetime'] = kmni_data.date + kmni_data.HH + '00'
-kmni_data.datetime = pd.to_datetime( kmni_data.datetime, format = '%Y%m%d%H%M')
-kmni_data.index = kmni_data.datetime
-kmni_data = kmni_data[['wind', 'temp', 'ghi']]
+knmi_data['datetime'] = knmi_data.date + knmi_data.HH + '00'
+knmi_data.datetime = pd.to_datetime( knmi_data.datetime, format = '%Y%m%d%H%M')
+knmi_data.index = knmi_data.datetime
+knmi_data = knmi_data[['wind', 'temp', 'ghi']]
 
-kmni_data.ghi = kmni_data.ghi * 2.77778
-kmni_data.temp = kmni_data.temp / 10
-kmni_data.wind = kmni_data.wind / 10
+knmi_data.ghi = knmi_data.ghi * 2.77778
+knmi_data.temp = knmi_data.temp / 10
+knmi_data.wind = knmi_data.wind / 10
 
-kmni_data.index = kmni_data.index.tz_localize('UTC')
+knmi_data.index = knmi_data.index.tz_localize('UTC')
 
 
 ### SUB-QUESTION 2.2
@@ -138,31 +138,31 @@ buildings = dict(zip_iterator)
 ###SUB-QUESTION 2.3
 
 # Calculate Eindoven Solar Zenith
-solarangles_Eind = pvlib.solarposition.ephemeris(kmni_data.index, lat_Eind, long_Eind, kmni_data.temp)
+solarangles_Eind = pvlib.solarposition.ephemeris(knmi_data.index, lat_Eind, long_Eind, knmi_data.temp)
 solarangles_Eind = solarangles_Eind[solarangles_Eind > 4]
 
-kmni_data = kmni_data.dropna()
-solarangles_Eind = solarangles_Eind[solarangles_Eind.index.isin(kmni_data.index)]
-kmni_data = kmni_data[kmni_data.index.isin(solarangles_Eind.index)]
+knmi_data = knmi_data.dropna()
+solarangles_Eind = solarangles_Eind[solarangles_Eind.index.isin(knmi_data.index)]
+knmi_data = knmi_data[knmi_data.index.isin(solarangles_Eind.index)]
 
 #Calculate Eindhoven DNI using the dirindex model 
-modelled_dni_Eind = find_dni('dirindex', kmni_data, solarangles_Eind, "KMNI_EIND")
-kmni_data['dni'] = modelled_dni_Eind
+modelled_dni_Eind = find_dni('dirindex', knmi_data, solarangles_Eind, "KMNI_EIND")
+knmi_data['dni'] = modelled_dni_Eind
 #kmni_data = kmni_data.dropna(axis=0, how='any')
 
 #Calculate DHI from DNI
-DHIEind = kmni_data.ghi - np.cos(solarangles_Eind.zenith/180*np.pi)*kmni_data['dni'] 
-kmni_data['dhi'] = DHIEind
+DHIEind = knmi_data.ghi - np.cos(solarangles_Eind.zenith/180*np.pi)*knmi_data['dni'] 
+knmi_data['dhi'] = DHIEind
 
 
 #Calculate the POAs
 surface = pd.read_csv('Surfaceparameters.csv', index_col = 'Surface')
 
-POAtotal = pd.DataFrame(index=kmni_data.index, columns = surface.index)
-POAdirect = pd.DataFrame(index=kmni_data.index, columns = surface.index)
-POAdiffuse = pd.DataFrame(index=kmni_data.index, columns = surface.index)
+POAtotal = pd.DataFrame(index=knmi_data.index, columns = surface.index)
+POAdirect = pd.DataFrame(index=knmi_data.index, columns = surface.index)
+POAdiffuse = pd.DataFrame(index=knmi_data.index, columns = surface.index)
 
 for i in surface.index:
-    POAtotal[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solar_df.azimuth, DNIEind, data.ghi, DHIEind)['poa_global']
-    POAdirect[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solar_df.azimuth, DNIEind, data.ghi, DHIEind)['poa_direct']
-    POAdiffuse[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solaranles_Eind.zenith, solar_df.azimuth, DNIEind, data.ghi, DHIEind)['poa_diffuse']
+    POAtotal[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_global']
+    POAdirect[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_direct']
+    POAdiffuse[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solarangles_Eind.azimuth, knmi_data.dni, knmi_data.ghi, knmi_data.dhi)['poa_diffuse']
