@@ -18,7 +18,7 @@ from sklearn.metrics import r2_score
 """ Question 1 - Model Testing """
 
 # Location
-latitude, longitude = 52.08746136865645, 5.168080610130638 # used long/lat from googlemaps for uithof
+latitude_UU, longitude_UU = 52.08746136865645, 5.168080610130638 # used long/lat from googlemaps for uithof
 
 MODELS = ['disc', 'dirint', 'dirindex','erbs']
 
@@ -61,7 +61,7 @@ def compare_dni(model, true_value, predicted_value):
      print_errors(rmse,mbe,mae,r2)
      
 # Get Irrandiance (UPOT data GHI) and solar angles (Zenith and Apparent Zenith)
-UPOT_data = pd.read_csv(r"C:\Users\NCG\OneDrive\Documents\Utrecht University\Energy in Built\6.2 Photovoltaic (PV) systems, irradiance and PV performance evaluation\PVpartA\Irradiance_2015_UPOT.csv", sep = ';', index_col = "timestamp", parse_dates= True) 
+UPOT_data = pd.read_csv("Irradiance_2015_UPOT.csv", sep = ';', index_col = "timestamp", parse_dates= True) 
 #UPOT_data = UPOT_data.resample("5min").mean()
 #UPOT_data = UPOT_data.dropna()
 
@@ -75,6 +75,7 @@ for model in MODELS:
     modelled_dni = find_dni(model, UPOT_data, solar_df)
     UPOT_data[model] = modelled_dni
     compare_dni(model, UPOT_data.DNI, modelled_dni)
+    
 #%%    
 ### GRAPHS for Sub-Question 3
 
@@ -93,30 +94,61 @@ for index, model in enumerate(MODELS):
 #%%
 """ Question 2 - Irradiance on building surfaces """
 
-knmi = pd.read_csv('knmi_ij_sch_vlie_vlis_rott_maas.csv', index_col = "STN", sep = ';',  parse_dates = True)
-    #set empty rows to NaN
-knmi = knmi.replace(r'\s+', np.nan, regex = True)
-    #delete all rows with NaN
-knmi = knmi.dropna()
-    #change column names
-knmi = knmi.rename({"H": "Hour", knmi.columns[4]: "Temperature", knmi.columns[5]: "GHI", knmi.columns[2]: "FH", knmi.columns[3]: "FF"  }, axis = 'columns')
+surface = pd.read_csv('Surfaceparameters.csv', index_col = 'Surface')
 
-#keep rows of certain STN value
-knmi = knmi.loc[(knmi.index == 240)] #keep data coming from weather station Schiphol. 
+data = pd.read_csv('knmi.txt')
+del data['# STN']
+data.columns = ['date', 'HH', 'wind', 'temp', 'ghi']
+data.date = data.date.astype(str)
+data.HH = data.HH.apply( lambda x: str(x).zfill(2))
+data.HH = data.HH.replace('24', '00')
 
-#resample time
-    #add a column with corresponding date time from 1/1/2019 01:00:00 (because dataset starts with Hour 1), of extent of the datafrime and per hourly frequency. 
-knmi['Date'] = pd.date_range(start = '1/1/2019 01:00:00', periods = len(knmi), freq = 'H')
-    #remove the YYMMDD and Hour columns from dataframe 
-knmi = knmi.drop(['YYYYMMDD', 'Hour'], axis = 1)
-    #put the 'date' column at the first place in the dataframe
-knmi = knmi[[ 'Date', 'FH', 'FF', 'Temperature', 'GHI']]   
+data['datetime'] = data.date + data.HH + '00'
+data.datetime = pd.to_datetime( data.datetime, format = '%Y%m%d%H%M')
+data.index = data.datetime
+data = data[['wind', 'temp', 'ghi']]
 
-#change GHI from j/cm2 per  hour to W/m2
-knmi['GHI_W/M2'] = pd.to_numeric(knmi.GHI) * 10000 /3600
+data.ghi = data.ghi * 2.77778
+data.temp = data.temp / 10
+data.wind = data.wind / 10
 
-### SUB-QUESTION 2.2
+data.index = data.index.tz_localize('UTC')
 
+data.to_csv('Assignment2.csv')
 
-hu
+# parameters
+lat_Eind = 51.451
+lon_Eind = 5.377
+pi = 3.14159265359
 
+# solar Zenith
+solarangles = pvlib.solarposition.ephemeris(data.index, lat_Eind, lon_Eind, data.temp)
+solarangles = solarangles[solarangles.index.isin(data.index)]
+
+data = data[data.index.isin(solarangles.index)]
+
+## model 3 (dirindex)
+AMR = pvlib.atmosphere.get_relative_airmass(solarangles.zenith, model='kastenyoung1989')
+AMM = pvlib.atmosphere.get_absolute_airmass(AMR)
+linkeTurb = pvlib.clearsky.lookup_linke_turbidity(data.index, lat_Eind, lon_Eind)
+clearsky = pvlib.clearsky.ineichen(solarangles.apparent_zenith, AMM, linkeTurb)
+clearsky = clearsky.dropna()
+clearsky = clearsky[clearsky.index.isin(data.index)]
+DNIEind = pvlib.irradiance.dirindex(data.ghi, clearsky.ghi, clearsky.dni, solarangles.zenith, data.index)
+DNIEind = DNIEind.dropna()
+DNIEind = DNIEind[DNIEind.index.isin(data.index)]
+data = data[data.index.isin(DNIEind.index)]
+
+DHIEind = data.ghi - np.cos(solarangles.zenith/180*pi)*DNIEind
+
+#CS_tilt = 40
+#CS_azimuth = 180
+
+POAtotal = pd.DataFrame(index=data.index, columns = surface.index)
+POAdirect = pd.DataFrame(index=data.index, columns = surface.index)
+POAdiffuse = pd.DataFrame(index=data.index, columns = surface.index)
+
+for i in surface.index:
+    POAtotal[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles.zenith, solarangles.azimuth, DNIEind, data.ghi, DHIEind)['poa_global']
+    POAdirect[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles.zenith, solarangles.azimuth, DNIEind, data.ghi, DHIEind)['poa_direct']
+    POAdiffuse[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles.zenith, solarangles.azimuth, DNIEind, data.ghi, DHIEind)['poa_diffuse']
