@@ -151,10 +151,9 @@ kmni_data['dni'] = modelled_dni_Eind
 #kmni_data = kmni_data.dropna(axis=0, how='any')
 
 #Calculate DHI from DNI
-#DHIEind = kmni_data.ghi - np.cos(solarangles_Eind.zenith/180*np.pi)*kmni_data['dni'] 
-#kmni_data['dhi'] = DHIEind
+DHIEind = kmni_data.ghi - np.cos(solarangles_Eind.zenith/180*np.pi)*kmni_data['dni'] 
+kmni_data['dhi'] = DHIEind
 
-#%%
 
 #Calculate the POAs
 surface = pd.read_csv('Surfaceparameters.csv', index_col = 'Surface')
@@ -164,6 +163,6 @@ POAdirect = pd.DataFrame(index=kmni_data.index, columns = surface.index)
 POAdiffuse = pd.DataFrame(index=kmni_data.index, columns = surface.index)
 
 for i in surface.index:
-    POAtotal[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles.zenith, solarangles.azimuth, DNIEind, data.ghi, DHIEind)['poa_global']
-    POAdirect[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles.zenith, solarangles.azimuth, DNIEind, data.ghi, DHIEind)['poa_direct']
-    POAdiffuse[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles.zenith, solarangles.azimuth, DNIEind, data.ghi, DHIEind)['poa_diffuse']
+    POAtotal[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solar_df.azimuth, DNIEind, data.ghi, DHIEind)['poa_global']
+    POAdirect[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solarangles_Eind.zenith, solar_df.azimuth, DNIEind, data.ghi, DHIEind)['poa_direct']
+    POAdiffuse[i] = pvlib.irradiance.get_total_irradiance(surface.loc[i, 'Slope'], surface.loc[i, 'Azimuth'], solaranles_Eind.zenith, solar_df.azimuth, DNIEind, data.ghi, DHIEind)['poa_diffuse']
