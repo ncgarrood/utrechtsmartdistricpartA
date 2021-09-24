@@ -195,23 +195,16 @@ POAdiffuseB.columns = TiltB
 
 ModuleParameters = pd.read_csv("ModuleParameters.csv", index_col = 'Parameters')
 
-### SUB-QUESTION 3.1
 #%%
-#Office Facades - 30% PV
-def get_area(surface):
-    area =  Buildings_sizes_df.loc[Buildings_sizes_df == H] * Buildings_sizes_df.loc[Buildings_sizes_df == W] * Buildings_sizes_df.loc[Buildings_sizes_df == percentage_covered]
-    Buildings_sizes_df['area'] = area
+### SUB-QUESTION 3.1
 
+#Areas
 HouseRoofHeight = 3/np.sin(np.deg2rad(40))
     
-Building_sizes = {"SurfaceASE": {"H":100, "W":50, "percentage_covered":0.3},"SurfaceASW" : {"H":100, "W":60, "percentage_covered":0.3},"SurfaceBE" : {"H":30, "W":30, "percentage_covered":0.3},"SurfaceBS": {"H":30, "W":50, "percentage_covered":0.3},"SurfaceBW": {"H":30, "W":30, "percentage_covered":0.3},"RoofCS": {"H":HouseRoofHeight, "W":50, "percentage_covered":0.6},"RoofCN": {"H":HouseRoofHeight, "W":50, "percentage_covered":0.6},"RoofDW": {"H":HouseRoofHeight, "W":50, "percentage_covered":0.6},"RoofDE": {"H":HouseRoofHeight, "W":50, "percentage_covered":0.6},"RoofA": {"H":60, "W":50, "percentage_covered":0.5},"RoofB":{"H":30, "W":50, "percentage_covered":0.5}}
-Building_sizes_df = pd.DataFrame(data = Building_sizes)
+Building_sizes_dict = {"SurfaceASE": {"H":100, "W":60, "percentage_covered":0.3},"SurfaceASW" : {"H":100, "W":50, "percentage_covered":0.3},"SurfaceBE" : {"H":30, "W":30, "percentage_covered":0.3},"SurfaceBS": {"H":30, "W":50, "percentage_covered":0.3},"SurfaceBW": {"H":30, "W":30, "percentage_covered":0.3},"RoofCS": {"H":HouseRoofHeight, "W":50, "percentage_covered":0.6},"RoofCN": {"H":HouseRoofHeight, "W":50, "percentage_covered":0.6},"RoofDW": {"H":HouseRoofHeight, "W":50, "percentage_covered":0.6},"RoofDE": {"H":HouseRoofHeight, "W":50, "percentage_covered":0.6},"RoofA": {"H":np.nan, "W":50, "percentage_covered":0.5},"RoofB":{"H":np.nan, "W":50, "percentage_covered":0.5}}
+Building_sizes = pd.DataFrame(data = Building_sizes_dict).transpose()
 
+Building_sizes["Area"] = Building_sizes['H']*Building_sizes['W']*Building_sizes['percentage_covered']
 
-for surface in Building_sizes_df:
-    Building_sizes_with_area = Building_sizes_df.multiply(Building_sizes_df[surface])
-
-
-#Areas = ["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS","SurfaceBW","RoofCS","RoofCN","RoofDW","RoofDE","RoofA","RoofB"]
 #AOI - angle of incidence of the solar vector on a surface. This is the angle between the solar vector and the surface normal.
 #solar_surface = pvlib.irradiance.aoi(surface_tilt, surface_azimuth, solar_zenith, solar_azimuth)
