@@ -103,7 +103,7 @@ def find_dni(model:str, location: str)-> pd.Series:
 
     return location_data.assign( **{model : output})
 
-def print_errors(rmse, mbe, mae, r2):
+def print_errors(model,rmse, mbe, mae, r2):
     print('{} RMSE: {}, MBE: {}, MAE: {}, R2: {}'
         .format(model.upper().ljust(8),       
             rmse,
@@ -117,10 +117,10 @@ def compare_dni(model, true_value, predicted_value):
      mbe = round((true_value - predicted_value).mean(),3)
      mae = round(mean_absolute_error(true_value, predicted_value),3)
      r2 = round(r2_score(true_value, predicted_value),3)
-     print_errors(rmse,mbe,mae,r2)
+     print_errors(model,rmse,mbe,mae,r2)
 
 def create_utrecht_dni_scatters():
-    fig, axs = plt.subplots(2, 2)
+    fig, axs = plt.subplots(2, 2,figsize = (12,7))
     #formatting
     fig.subplots_adjust(wspace = 0.2, hspace = 0.3)
 
@@ -143,29 +143,43 @@ def create_surface_dict(KEY_LIST:list,TILTS:list,ORIENTATIONS: list) -> dict:
         }
       
     return buildings 
-   
-#%%
-""" Question 1 - Model Testing """
 
-##Calculate the DNI based on four models
+BUILDINGS = create_surface_dict(KEY_LIST,TILTS,ORIENTATIONS) #note NaNs for Roof A & B as to be determined
+BUILDINGS_df = pd.DataFrame(data = BUILDINGS)
 
-#First load the data set and solar angles for Utrecht
-Utrecht_data = load_location_and_solar_angles('Utrecht')
 
-###SUB-QUESTION 1.2
-for model in MODELS:
-    modelled_dni_utrecht = find_dni(model, 'Utrecht')[model]
-    compare_dni(model, Utrecht_data.DNI, modelled_dni_utrecht)
+def calculate_POA_with_dirindex(location_data:pd.DataFrame , surface:str, surface_tilt:int, surface_azimuth:int):
+    
+    solar_zenith = location_data.zenith
+    solar_azimuth = location_data.azimuth
+    dni = location_data.dirindex
+    ghi = location_data.ghi
+    dhi = location_data.dhi_from_dni
+    return get_total_irradiance(surface_tilt, surface_azimuth, solar_zenith, solar_azimuth, dni, ghi, dhi)
 
-###SUB-QUESTION 1.3
-scatter_modelled_dnis = create_utrecht_dni_scatters()
+def create_surfaces_POAs(model:str , location:str):
+    
+    location_data = (
+        find_dni(model,location)
+        .assign(dhi_from_dni = lambda df: df.ghi  - np.cos(np.rad2deg(df.zenith))*df[model] )
+        )
+    df = pd.DataFrame()
+    
+    for surface in BUILDINGS_df :
+        POA = calculate_POA_with_dirindex(location_data, surface, BUILDINGS_df .loc["tilt",surface], BUILDINGS_df.loc["orientation",surface])
+        POA =  POA.rename(columns=dict(zip(POA.columns, [x.replace("poa",surface) for x in POA.columns])))
+         
+        
+        df = pd.concat((df, POA), axis=1)
+        
+    return df
 
-#%%
-""" Question 2 - Irradiance on building surfaces """
-
-###SUB-QUESTION 2.2
-Eind_data = find_dni('dirindex','Eindhoven')
-buildings = create_surface_dict(KEY_LIST,TILTS,ORIENTATIONS) #note NaNs for Roof A & B as to be determined
-
-###SUB-QUESTION 2.3
-
+def calculate_optimal_angles(surfaces:dict):
+    df = pd.DataFrame(columns = ['surface', 'tilt', 'orientation', 'sum of POA global'])
+    for surface in surfaces:
+        for tilt in surfaces[surface]['tilt']:
+            for orientation in surfaces[surface]['orientation']:
+                x = calculate_POA_with_dirindex(surface, modelled_dni_Eind, tilt, orientation)['poa_global'].sum()
+                x = x/10**6 #NOTE CONVERSION TO MW
+                df.loc[len(df)] = [surface,tilt,orientation,x] 
+    return df
