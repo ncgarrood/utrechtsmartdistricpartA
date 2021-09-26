@@ -75,7 +75,7 @@ def load_location_and_solar_angles(location:str)-> pd.DataFrame:
     
     solar_angles = (
         ephemeris(location_data.index, LOCATIONS[location]["latitude"],  LOCATIONS[location]["longitude"], location_data.temp)
-        .loc[lambda df: df.elevation > 4  ]
+        .loc[lambda df: df.elevation > 4.5]
     )
     
     location_data = location_data.merge(solar_angles, left_index=True, right_index=True, how='right')
@@ -87,7 +87,7 @@ def find_dni(model:str, location: str)-> pd.Series:
     location_data = load_location_and_solar_angles(location)
       
     if model == 'disc':
-        output = disc(location_data['ghi'],location_data['zenith'], location_data.index).dni
+        output = disc(location_data.ghi,location_data.zenith, location_data.index).dni
     elif model == 'dirint':
         output = dirint(location_data.ghi, location_data.zenith, location_data.index)
     elif model == 'dirindex':
@@ -119,7 +119,32 @@ def compare_dni(model, true_value, predicted_value):
      r2 = round(r2_score(true_value, predicted_value),3)
      print_errors(rmse,mbe,mae,r2)
 
+def create_utrecht_dni_scatters():
+    fig, axs = plt.subplots(2, 2)
+    #formatting
+    fig.subplots_adjust(wspace = 0.2, hspace = 0.3)
 
+    for index, model in enumerate(MODELS):
+        modelled_dni_scatter = find_dni(model,'Utrecht')
+        subplot = axs[index//2][index % 2]
+        subplot.scatter(modelled_dni_scatter.DNI, modelled_dni_scatter[model], s=0.001, c= 'lightcoral')
+        subplot.set_title(model.upper())
+        subplot.set(xlabel='Observed DNI [W/m2]', ylabel='Modelled DNI [W/m2]')
+        subplot.plot([0,999],[0,999], c = 'gray', linewidth = 1)
+
+
+def create_surface_dict(KEY_LIST:list,TILTS:list,ORIENTATIONS: list) -> dict:
+    buildings = {}
+    
+    for index, name in enumerate(KEY_LIST):
+        buildings[name] = {
+            'tilt': TILTS [index],
+            'orientation' : ORIENTATIONS [index]
+        }
+      
+    return buildings 
+   
+#%%
 """ Question 1 - Model Testing """
 
 ##Calculate the DNI based on four models
@@ -127,9 +152,20 @@ def compare_dni(model, true_value, predicted_value):
 #First load the data set and solar angles for Utrecht
 Utrecht_data = load_location_and_solar_angles('Utrecht')
 
-
+###SUB-QUESTION 1.2
 for model in MODELS:
-    modelled_dni_utrecht = find_dni(model, 'Utrecht')
-    Utrecht_data[model] = modelled_dni
+    modelled_dni_utrecht = find_dni(model, 'Utrecht')[model]
     compare_dni(model, Utrecht_data.DNI, modelled_dni_utrecht)
+
+###SUB-QUESTION 1.3
+scatter_modelled_dnis = create_utrecht_dni_scatters()
+
+#%%
+""" Question 2 - Irradiance on building surfaces """
+
+###SUB-QUESTION 2.2
+Eind_data = find_dni('dirindex','Eindhoven')
+buildings = create_surface_dict(KEY_LIST,TILTS,ORIENTATIONS) #note NaNs for Roof A & B as to be determined
+
+###SUB-QUESTION 2.3
 
