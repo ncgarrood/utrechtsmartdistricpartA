@@ -39,9 +39,11 @@ LOCATIONS = {
 }
 
 MODELS = ['disc', 'dirint', 'dirindex','erbs']
-TILTS = [90, 90, 90, 90, 90, 40, 40, 40, 40, np.nan, np.nan]
-ORIENTATIONS = [135, 225, 90, 180, 270, 180, 0, 270, 90, np.nan, 180]
-KEY_LIST = ["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS","SurfaceBW","RoofCS","RoofCN","RoofDW","RoofDE","RoofA","RoofB"]
+TILTS = [90, 90, 90, 90, 90, 40, 40, 40, 40]
+ORIENTATIONS = [135, 225, 90, 180, 270, 180, 0, 270, 90]
+KEY_LIST = ["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS","SurfaceBW","RoofCS","RoofCN","RoofDW","RoofDE"]
+SURFACES_TO_CALCULATE = {'RoofA':{'tilt': list(range(10,45,5)), "orientation":[135,225] } ,'RoofB':{'tilt': list(range(10,45,5)), "orientation": [180]}}
+
 
 ### FUNCTIONS
 
@@ -144,9 +146,7 @@ def create_surface_dict(KEY_LIST:list,TILTS:list,ORIENTATIONS: list) -> dict:
       
     return buildings 
 
-BUILDINGS = create_surface_dict(KEY_LIST,TILTS,ORIENTATIONS) #note NaNs for Roof A & B as to be determined
-BUILDINGS_df = pd.DataFrame(data = BUILDINGS)
-
+BUILDINGS = create_surface_dict(KEY_LIST,TILTS,ORIENTATIONS) 
 
 def calculate_POA_with_dirindex(location_data:pd.DataFrame , surface:str, surface_tilt:int, surface_azimuth:int):
     
@@ -157,7 +157,7 @@ def calculate_POA_with_dirindex(location_data:pd.DataFrame , surface:str, surfac
     dhi = location_data.dhi_from_dni
     return get_total_irradiance(surface_tilt, surface_azimuth, solar_zenith, solar_azimuth, dni, ghi, dhi)
 
-def create_surfaces_POAs(model:str , location:str):
+def create_surfaces_POAs(model:str , location:str, BUILDINGS_df:pd.DataFrame) -> pd.DataFrame:
     
     location_data = (
         find_dni(model,location)
@@ -168,18 +168,49 @@ def create_surfaces_POAs(model:str , location:str):
     for surface in BUILDINGS_df :
         POA = calculate_POA_with_dirindex(location_data, surface, BUILDINGS_df .loc["tilt",surface], BUILDINGS_df.loc["orientation",surface])
         POA =  POA.rename(columns=dict(zip(POA.columns, [x.replace("poa",surface) for x in POA.columns])))
-         
         
         df = pd.concat((df, POA), axis=1)
         
     return df
 
-def calculate_optimal_angles(surfaces:dict):
-    df = pd.DataFrame(columns = ['surface', 'tilt', 'orientation', 'sum of POA global'])
-    for surface in surfaces:
-        for tilt in surfaces[surface]['tilt']:
-            for orientation in surfaces[surface]['orientation']:
-                x = calculate_POA_with_dirindex(surface, modelled_dni_Eind, tilt, orientation)['poa_global'].sum()
-                x = x/10**6 #NOTE CONVERSION TO MW
-                df.loc[len(df)] = [surface,tilt,orientation,x] 
-    return df
+def calculate_optimal_angles(model:str , location:str, surfaces_to_calculate:dict) -> pd.DataFrame:
+    
+    if model == 'dirindex' and location == "Eindhoven":
+        location_data = (
+            find_dni(model,location)
+            .assign(dhi_from_dni = lambda df: df.ghi  - np.cos(np.rad2deg(df.zenith))*df[model] )
+        )
+
+        df = pd.DataFrame() #creates a dataframe of the POA sums at various tilts and orientations
+        df = pd.DataFrame(columns = ['surface', 'tilt', 'orientation', 'sum of POA global'])
+        for surface in surfaces_to_calculate:
+            for tilt in surfaces_to_calculate[surface]['tilt']:
+                for orientation in surfaces_to_calculate[surface]['orientation']:
+                    x = calculate_POA_with_dirindex(location_data, surface, tilt, orientation)['poa_global'].sum()
+                    x = x/10**6 #NOTE CONVERSION TO MW
+                    df.loc[len(df)] = [surface,tilt,orientation,x]
+        return df
+
+    else: 
+        raise Exception('note that function is currently only set up for model: dirindex and location:Eindhoven')
+    
+def create_bar_charts(roof:str):
+    """Enter roof A or B and get the bar chart of it"""
+    sns.set_theme(style="whitegrid")
+    
+    #filter the POA_sums dataframe by roof A and roof B
+    POA_sums_RoofA_and_B = calculate_optimal_angles('dirindex', 'Eindhoven', SURFACES_TO_CALCULATE) #query on this, not optimal solution 
+    POA_totals = POA_sums_RoofA_and_B[POA_sums_RoofA_and_B['surface'] == roof]
+    
+    # Draw a nested barplot by species and sex
+    g = sns.catplot(
+        data = POA_totals, kind="bar",
+        x="tilt", y="sum of POA global", hue="orientation",
+        ci = None, palette="dark", alpha=.6, height=6
+    )
+    g.despine(left=True)
+    g.set(ylim=(1, 1.65))
+    g.set_axis_labels("Tilt [degrees]", "Sum of POA_global [MW/m2]")
+    g.legend.set_title('Orientation')
+    
+
