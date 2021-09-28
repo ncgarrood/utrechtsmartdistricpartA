@@ -55,7 +55,7 @@ def find_dni(model, ghi, solar_position, input_data):
         return pvlib.irradiance.erbs(ghi, zenith, time).dni
     raise Exception('Invalid model')
 
-def print_errors(rmse, mbe, mae, r2):
+def print_errors(model,rmse, mbe, mae, r2):
     print('{} RMSE: {}, MBE: {}, MAE: {}, R2: {}'
         .format(model.upper().ljust(8),       
             rmse,
@@ -69,7 +69,7 @@ def compare_dni(model, true_value, predicted_value):
      mbe = round((true_value - predicted_value).mean(),3)
      mae = round(mean_absolute_error(true_value, predicted_value),3)
      r2 = round(r2_score(true_value, predicted_value),3)
-     print_errors(rmse,mbe,mae,r2)
+     print_errors(model,rmse,mbe,mae,r2)
      
 # Get Irrandiance (UPOT data GHI) and solar angles (Zenith and Apparent Zenith)
 UPOT_data = pd.read_csv("Irradiance_2015_UPOT.csv", sep = ';', index_col = "timestamp", parse_dates= True) 
@@ -96,7 +96,7 @@ fig.subplots_adjust(wspace = 0.2, hspace = 0.3)
 
 for index, model in enumerate(MODELS):
     subplot = axs[index//2][index % 2]
-    subplot.scatter(UPOT_data.DNI, UPOT_data[model], s=0.0005, c= 'lightcoral')
+    subplot.scatter(UPOT_data.DNI, UPOT_data[model], s=0.001, c= 'lightcoral')
     subplot.set_title(model.upper())
     subplot.set(xlabel='Observed DNI [W/m2]', ylabel='Modelled DNI [W/m2]')
     subplot.plot([0,999],[0,999], c = 'gray', linewidth = 1)
@@ -126,17 +126,20 @@ knmi_data.index = knmi_data.index.tz_localize('UTC')
 
 ### SUB-QUESTION 2.2
 #building a dictionary of surfaces, note 0s for surfaces we are going to calculate in next question
-tilts = [90, 90, 90, 90, 90, 40, 40, 40, 40, 0, 0]
-orientations = [135, 225, 90, 180, 270, 180, 0, 270, 90, 0, 0]
-
-buildings_list = [list(x) for x in zip(tilts, orientations)]
+tilts = [90, 90, 90, 90, 90, 40, 40, 40, 40, np.nan, np.nan]
+orientations = [135, 225, 90, 180, 270, 180, 0, 270, 90, np.nan, 180]
 keys_list = ["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS","SurfaceBW","RoofCS","RoofCN","RoofDW","RoofDE","RoofA","RoofB"]
 
-zip_iterator = zip(keys_list, buildings_list)
-buildings = dict(zip_iterator)
+buildings = {}
+
+
+for index, name in enumerate(keys_list):
+    buildings[name] = {
+        'tilt': tilts [index],
+        'orientation' : orientations [index]
+    }
 
 ###SUB-QUESTION 2.3
-
 # Calculate Eindoven Solar Zenith
 solarangles_Eind = pvlib.solarposition.ephemeris(knmi_data.index, lat_Eind, long_Eind, knmi_data.temp)
 solarangles_Eind = solarangles_Eind[solarangles_Eind > 4]
@@ -229,3 +232,10 @@ for i in POAtotalB[i]:
 
 
 #POAtotalB = POAtotalB[['ten', 'fifteen', 'twenty', 'twentyfive', 'thirty', 'thirtyfive', 'fourty', 'fourtyfive']]
+
+def calculate_optimal_angles():
+    for surface in surfaces:
+        for tilt in surfaces[surface]['tilt']:
+            for orientation in surfaces[surface]['orientation']:
+                x = calculate_POA_with_dirindex(surfaces[surface], modelled_dni_Eind)
+                return x

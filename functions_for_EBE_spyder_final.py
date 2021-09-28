@@ -46,6 +46,11 @@ ORIENTATIONS = [135, 225, 90, 180, 270, 180, 0, 270, 90]
 KEY_LIST = ["SurfaceASE","SurfaceASW","SurfaceBE","SurfaceBS","SurfaceBW","RoofCS","RoofCN","RoofDW","RoofDE"]
 SURFACES_TO_CALCULATE = {'RoofA':{'tilt': list(range(10,45,5)), "orientation":[135,225] } ,'RoofB':{'tilt': list(range(10,45,5)), "orientation": [180]}}
 
+HouseRoofHeight = 3/np.sin(np.deg2rad(40))
+BUILDING_SIZES = {"SurfaceASE": {"H":100, "W":60, "percentage_covered":0.3},"SurfaceASW" : {"H":100, "W":50, "percentage_covered":0.3},"SurfaceBE" : {"H":30, "W":30, "percentage_covered":0.3},"SurfaceBS": {"H":30, "W":50, "percentage_covered":0.3},"SurfaceBW": {"H":30, "W":30, "percentage_covered":0.3},"RoofCS": {"H":HouseRoofHeight, "W":50, "percentage_covered":0.6},"RoofCN": {"H":HouseRoofHeight, "W":50, "percentage_covered":0.6},"RoofDW": {"H":HouseRoofHeight, "W":50, "percentage_covered":0.6},"RoofDE": {"H":HouseRoofHeight, "W":50, "percentage_covered":0.6},"RoofA": {"H":60, "W":50, "percentage_covered":0.5},"RoofB":{"H":30, "W":50, "percentage_covered":0.5}}
+# For the office rooftops, assume that the area of the systems will be equal to the 50% of the area of the rooftop. 
+#Assume these to be mounted on top of the existing roof with the proper tilt.
+
 
 ### FUNCTIONS
 
@@ -173,7 +178,7 @@ def create_surfaces_POAs(model:str , location:str, BUILDINGS_df:pd.DataFrame) ->
     
     for surface in BUILDINGS_df :
         POA = calculate_POA_with_dirindex(location_data, surface, BUILDINGS_df .loc["tilt",surface], BUILDINGS_df.loc["orientation",surface])
-        POA =  POA.rename(columns=dict(zip(POA.columns, [x.replace("poa",surface) for x in POA.columns])))
+        POA =  POA.rename(columns=dict(zip(POA.columns, [x.replace("poa",surface+"_poa") for x in POA.columns])))
         
         df = pd.concat((df, POA), axis=1)
         
@@ -221,7 +226,35 @@ def create_bar_charts(roof:str):
 
 """Question 3 Functions"""
 
+def get_building_angles_areas(BUILDING_SIZES, BUILDINGS_df_update):
+    """take the height info from the building_size dict and the tilt/orientation info from the surfaces dict and merge them"""
+    Building_sizes = pd.DataFrame(data = BUILDING_SIZES).transpose()
+    Building_sizes["Area"] = round(Building_sizes['H']*Building_sizes['W']*Building_sizes['percentage_covered'],2)
+    Building_sizes = Building_sizes.transpose()
+
+    BUILDINGS_tilts_areas = BUILDINGS_df_update.copy()
+    BUILDINGS_tilts_areas = pd.concat([BUILDINGS_tilts_areas, Building_sizes])
+    BUILDINGS_tilts_areas = BUILDINGS_tilts_areas.drop(['H', 'W', 'percentage_covered'])
+    return BUILDINGS_tilts_areas
+
 def load_ModuleParameters():
     df = pd.read_excel("ModuleParameters.xlsx", index_col = 'Parameters')
     return df
+
+def find_panels_capacity(ModuleType:str, BUILDINGS_tilts_areas:pd.DataFrame, ModuleParameters:pd.DataFrame) -> pd.DataFrame:
+    df = pd.DataFrame(columns = ['Surface', "Number_panels", "Capacity"])
+    """Returns the capaicty and number of panels per surface as a dataframe"""
+    for surface in BUILDINGS_tilts_areas:
+        Number_panels = (BUILDINGS_tilts_areas[surface]['Area']//ModuleParameters[ModuleType]['Area'])//ModuleParameters[ModuleType]['Cells_in_Series']
+        Capacity = Number_panels*ModuleParameters[ModuleType]['Wp']
+        df.loc[len(df)] = [surface, Number_panels, Capacity]
+    df.rename({'Number_panels':'Number_panels_'+ModuleType, 'Capacity': 'Capacity_'+ModuleType}, axis = 1, inplace = True)
+    df.set_index('Surface', inplace = True)
+    df = df.transpose()
+    
+    return df
+
+
+
+
 
