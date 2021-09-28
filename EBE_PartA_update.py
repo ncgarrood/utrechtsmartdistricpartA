@@ -107,7 +107,7 @@ def find_dni(model:str, location: str)-> pd.Series:
     else: 
         raise Exception('Invalid model or location')
 
-    return location_data.assign( **{model : output})
+    return location_data.assign( **{model+"_DNI" : output})
 
 def print_errors(model,rmse, mbe, mae, r2):
     print('{} RMSE: {}, MBE: {}, MAE: {}, R2: {}'
