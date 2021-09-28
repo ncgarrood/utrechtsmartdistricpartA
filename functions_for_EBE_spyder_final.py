@@ -239,6 +239,7 @@ def get_building_angles_areas(BUILDING_SIZES, BUILDINGS_df_update):
 
 def load_ModuleParameters():
     df = pd.read_excel("ModuleParameters.xlsx", index_col = 'Parameters')
+    df.rename({'mono-Si': "monoSi"}, axis=1,  inplace=True)
     return df
 
 def find_panels_capacity(ModuleType:str, BUILDINGS_tilts_areas:pd.DataFrame, ModuleParameters:pd.DataFrame) -> pd.DataFrame:

@@ -179,6 +179,3 @@ def get_DC_output(location:str, BUILDINGS_tilts_areas:dict):
     location_data = location_data.merge(df_aoi_POA, left_index=True, right_index=True, how= 'left')
     return location_data
 
-#get_DC_output('Eindhoven', BUILDINGS_tilts_areas)
-
-#get_aoi_and_POAs(BUILDINGS_tilts_areas, Utrecht_data)
