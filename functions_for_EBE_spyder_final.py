@@ -167,7 +167,7 @@ def create_surfaces_POAs(model:str , location:str, BUILDINGS_df:pd.DataFrame) ->
     
     location_data = (
         find_dni(model,location)
-        .assign(dhi_from_dni = lambda df: (df.ghi  - np.cos(np.deg2rad(df.zenith))*df[model+"_DNI"] )
+        .assign(dhi_from_dni = lambda df: df.ghi  - np.cos(np.deg2rad(df.zenith))*df[model+"_DNI"] )
         )
     df = pd.DataFrame()
     
