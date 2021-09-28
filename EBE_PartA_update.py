@@ -12,10 +12,12 @@ import datetime as dt
 import numpy as np
 import seaborn as sns
 
-from pvlib.irradiance import get_total_irradiance,disc,dirint,dirindex,erbs
+from pvlib.irradiance import get_total_irradiance,disc,dirint,dirindex,erbs,aoi
 from pvlib.solarposition import ephemeris
 from pvlib.atmosphere import get_relative_airmass,get_absolute_airmass
 from pvlib.clearsky import lookup_linke_turbidity,ineichen
+from pvlib.pvsystem import sapm_effective_irradiance, sapm
+from pvlib.temperature import sapm_cell
 
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
@@ -46,6 +48,8 @@ SURFACES_TO_CALCULATE = {'RoofA':{'tilt': list(range(10,45,5)), "orientation":[1
 
 
 ### FUNCTIONS
+
+"""Question 1 Functions"""
 
 def load_location_and_solar_angles(location:str)-> pd.DataFrame:
     
@@ -135,6 +139,8 @@ def create_utrecht_dni_scatters():
         subplot.plot([0,999],[0,999], c = 'gray', linewidth = 1)
 
 
+"""Question 2 Functions"""
+
 def create_surface_dict(KEY_LIST:list,TILTS:list,ORIENTATIONS: list) -> dict:
     buildings = {}
     
@@ -202,7 +208,7 @@ def create_bar_charts(roof:str):
     POA_sums_RoofA_and_B = calculate_optimal_angles('dirindex', 'Eindhoven', SURFACES_TO_CALCULATE) #query on this, not optimal solution 
     POA_totals = POA_sums_RoofA_and_B[POA_sums_RoofA_and_B['surface'] == roof]
     
-    # Draw a nested barplot by species and sex
+    # Draw a nested barplot by tilt and orientation
     g = sns.catplot(
         data = POA_totals, kind="bar",
         x="tilt", y="sum of POA global", hue="orientation",
@@ -212,5 +218,9 @@ def create_bar_charts(roof:str):
     g.set(ylim=(1, 1.65))
     g.set_axis_labels("Tilt [degrees]", "Sum of POA_global [MW/m2]")
     g.legend.set_title('Orientation')
-    
 
+"""Question 3 Functions"""
+
+def load_ModuleParameters():
+    df = pd.read_excel("ModuleParameters.xlsx", index_col = 'Parameters')
+    return df
