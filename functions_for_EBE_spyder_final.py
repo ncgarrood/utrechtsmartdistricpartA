@@ -133,7 +133,7 @@ def create_utrecht_dni_scatters():
     for index, model in enumerate(MODELS):
         modelled_dni_scatter = find_dni(model,'Utrecht')
         subplot = axs[index//2][index % 2]
-        subplot.scatter(modelled_dni_scatter.DNI, modelled_dni_scatter[model], s=0.001, c= 'lightcoral')
+        subplot.scatter(modelled_dni_scatter.DNI, modelled_dni_scatter[model+"_DNI"], s=0.001, c= 'lightcoral')
         subplot.set_title(model.upper())
         subplot.set(xlabel='Observed DNI [W/m2]', ylabel='Modelled DNI [W/m2]')
         subplot.plot([0,999],[0,999], c = 'gray', linewidth = 1)
@@ -158,7 +158,7 @@ def calculate_POA_with_dirindex(location_data:pd.DataFrame , surface:str, surfac
     
     solar_zenith = location_data.zenith
     solar_azimuth = location_data.azimuth
-    dni = location_data.dirindex
+    dni = location_data.dirindex_DNI
     ghi = location_data.ghi
     dhi = location_data.dhi_from_dni
     return get_total_irradiance(surface_tilt, surface_azimuth, solar_zenith, solar_azimuth, dni, ghi, dhi)
@@ -167,7 +167,7 @@ def create_surfaces_POAs(model:str , location:str, BUILDINGS_df:pd.DataFrame) ->
     
     location_data = (
         find_dni(model,location)
-        .assign(dhi_from_dni = lambda df: df.ghi  - np.cos(np.rad2deg(df.zenith))*df[model] )
+        .assign(dhi_from_dni = lambda df: (df.ghi  - np.cos(np.deg2rad(df.zenith))*df[model+"_DNI"] )
         )
     df = pd.DataFrame()
     
@@ -184,7 +184,7 @@ def calculate_optimal_angles(model:str , location:str, surfaces_to_calculate:dic
     if model == 'dirindex' and location == "Eindhoven":
         location_data = (
             find_dni(model,location)
-            .assign(dhi_from_dni = lambda df: df.ghi  - np.cos(np.rad2deg(df.zenith))*df[model] )
+            .assign(dhi_from_dni = lambda df: df.ghi  - np.cos(np.deg2rad(df.zenith))*df[model+"_DNI"] )
         )
 
         df = pd.DataFrame() #creates a dataframe of the POA sums at various tilts and orientations
