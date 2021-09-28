@@ -73,8 +73,9 @@ max_a_row = POA_sums_RoofA.iloc[POA_sums_RoofA['sum of POA global'].idxmax(axis=
 max_a_row['tilt']
 max_a_row['orientation']
 
-
+POA_sums_RoofB = POA_sums_RoofA_and_B.loc[lambda df: df['surface'] == "RoofB"]
 POA_sums_RoofB['sum of POA global'].max()
+
 AB = [[max_a_row['tilt'], 20], [max_a_row['orientation'],180]]
 ABdf = pd.DataFrame(data = AB, index = ['tilt', 'orientation'], columns = ["RoofA", "RoofB"])
 ABdf
