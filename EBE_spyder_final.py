@@ -12,7 +12,7 @@ Created on Fri Sep 17 12:27:16 2021
 @author: NCG
 """
 
-from EBE_PartA_update import (
+from functions_for_EBE_spyder_final import (
     #functions
     load_location_and_solar_angles, find_dni, compare_dni, create_utrecht_dni_scatters, create_surfaces_POAs, calculate_optimal_angles, create_bar_charts, 
     #global variables

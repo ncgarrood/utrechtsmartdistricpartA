@@ -215,7 +215,7 @@ def create_bar_charts(roof:str):
         ci = None, palette="dark", alpha=.6, height=6
     )
     g.despine(left=True)
-    g.set(ylim=(1, 1.65))
+    g.set(ylim=(0.8,1.3))
     g.set_axis_labels("Tilt [degrees]", "Sum of POA_global [MW/m2]")
     g.legend.set_title('Orientation')
 
@@ -224,3 +224,4 @@ def create_bar_charts(roof:str):
 def load_ModuleParameters():
     df = pd.read_excel("ModuleParameters.xlsx", index_col = 'Parameters')
     return df
+
