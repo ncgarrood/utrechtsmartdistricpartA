@@ -71,7 +71,8 @@ def load_location_and_solar_angles(location:str)-> pd.DataFrame:
             pd.read_csv(LOCATIONS[location]["filename"])
             .drop(["# STN","YYYYMMDD","H"],axis=1)
             .set_axis( [ 'wind', 'temp', 'ghi'], axis=1, inplace=False)
-            .assign( datetime = lambda df:pd.date_range(start = '1/1/2019 00:00:00', periods = len(df), freq = 'H', tz='CET'),
+            .assign( datetime = lambda df:pd.date_range(start = '1/1/2019 00:30:00', periods = len(df), freq = 'H', tz='CET'), 
+            #weird think appaz to start at 00.30 since its the middle of the measured hour seems a bit hakcy
                      ghi =  lambda df: df.ghi * 2.77778,
                      temp =   lambda df: df.temp / 10,
                      wind =   lambda df: df.wind / 10
@@ -178,8 +179,8 @@ def create_surfaces_POAs(model:str , location:str, BUILDINGS_df:pd.DataFrame) ->
     
     for surface in BUILDINGS_df :
         POA = calculate_POA_with_dirindex(location_data, surface, BUILDINGS_df .loc["tilt",surface], BUILDINGS_df.loc["orientation",surface])
+        POA = POA.drop(['poa_sky_diffuse', 'poa_ground_diffuse'],axis=1)
         POA =  POA.rename(columns=dict(zip(POA.columns, [x.replace("poa",surface+"_poa") for x in POA.columns])))
-        
         df = pd.concat((df, POA), axis=1)
         
     return df
