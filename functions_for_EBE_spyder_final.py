@@ -199,7 +199,7 @@ def calculate_optimal_angles(model:str , location:str, surfaces_to_calculate:dic
             for tilt in surfaces_to_calculate[surface]['tilt']:
                 for orientation in surfaces_to_calculate[surface]['orientation']:
                     x = calculate_POA_with_dirindex(location_data, surface, tilt, orientation)['poa_global'].sum()
-                    x = x/10**6 #NOTE CONVERSION TO MW
+                    x = x/10**3 #NOTE CONVERSION TO kW
                     df.loc[len(df)] = [surface,tilt,orientation,x]
         return df
 
@@ -221,8 +221,8 @@ def create_bar_charts(roof:str):
         ci = None, palette="dark", alpha=.6, height=6
     )
     g.despine(left=True)
-    g.set(ylim=(0.8,1.3))
-    g.set_axis_labels("Tilt [degrees]", "Sum of POA_global [MW/m2]")
+    g.set(ylim=(800,1300))
+    g.set_axis_labels("Tilt [degrees]", "Sum of POA_global [kW/m2]")
     g.legend.set_title('Orientation')
 
 """Question 3 Functions"""
