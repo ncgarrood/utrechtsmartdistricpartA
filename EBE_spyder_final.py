@@ -113,6 +113,25 @@ POA_total
 
 ###SUB-QUESTION 2.6
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # added a text string here of some ideas for this one, was quite lazy answering it, think we should add more
 """best is 135 orientation, 30 tilt for A, and 20 tilt for B
 
