@@ -199,7 +199,7 @@ def calculate_optimal_angles(model:str , location:str, surfaces_to_calculate:dic
             for tilt in surfaces_to_calculate[surface]['tilt']:
                 for orientation in surfaces_to_calculate[surface]['orientation']:
                     x = calculate_POA_with_dirindex(location_data, surface, tilt, orientation)['poa_global'].sum()
-                   
+                    x = x/10**3 #NOTE CONVERSION TO kW
                     df.loc[len(df)] = [surface,tilt,orientation,x]
         return df
 
@@ -213,7 +213,6 @@ def create_bar_charts(roof:str):
     #filter the POA_sums dataframe by roof A and roof B
     POA_sums_RoofA_and_B = calculate_optimal_angles('dirindex', 'Eindhoven', SURFACES_TO_CALCULATE) #query on this, not optimal solution 
     POA_totals = POA_sums_RoofA_and_B[POA_sums_RoofA_and_B['surface'] == roof]
-    POA_totals.loc[:,'sum of POA global'] = POA_totals.loc[:,'sum of POA global']/10**3
     
     # Draw a nested barplot by tilt and orientation
     g = sns.catplot(
@@ -223,7 +222,7 @@ def create_bar_charts(roof:str):
     )
     g.despine(left=True)
     g.set(ylim=(800,1300))
-    g.set_axis_labels("Tilt [degrees]", "Sum of POA_global [kWh/m2]")
+    g.set_axis_labels("Tilt [degrees]", "Sum of POA_global [kW/m2]")
     g.legend.set_title('Orientation')
 
 """Question 3 Functions"""
