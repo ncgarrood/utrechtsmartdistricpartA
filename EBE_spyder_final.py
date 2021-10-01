@@ -185,7 +185,7 @@ create_bar_charts_DC_outputs_surface_groups(module_yields)
 create_bar_charts_DC_outputs_module_groups(module_yields)
 
 ###SUB-QUESTION 3.4 - create a PV systems table (note its not dynamic, if we change the data we need to change this function)
-get_PV_systems_table(BUILDINGS_df_update, Surfaces_Panel_info)
+PV_table = get_PV_systems_table(BUILDINGS_df_update, Surfaces_Panel_info)
 
 #%%
 """Question 4"""
