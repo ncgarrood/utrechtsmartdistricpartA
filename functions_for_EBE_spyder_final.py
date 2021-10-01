@@ -215,7 +215,7 @@ def create_bar_charts(roof:str):
     POA_totals = POA_sums_RoofA_and_B[POA_sums_RoofA_and_B['surface'] == roof]
     
     # Draw a nested barplot by tilt and orientation
-    g = sns.catplot(
+    g = sns.catplot(df
         data = POA_totals, kind="bar",
         x="tilt", y="sum of POA global", hue="orientation",
         ci = None, palette="dark", alpha=.6, height=6
