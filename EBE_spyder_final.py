@@ -24,6 +24,8 @@ from functions_for_EBE_spyder_final import (
     #functions
     load_location_and_solar_angles, find_dni, compare_dni, create_utrecht_dni_scatters, create_surfaces_POAs, 
     calculate_optimal_angles, create_bar_charts, load_ModuleParameters, get_building_angles_areas, find_panels_capacity,
+    get_DC_output, create_bar_charts_DC_outputs_surface_groups, create_bar_charts_DC_outputs_module_groups, 
+    get_PV_systems_table, 
     
     #global variables
     MODELS, LOCATIONS, KEY_LIST, TILTS, ORIENTATIONS, BUILDINGS, SURFACES_TO_CALCULATE, BUILDING_SIZES,
@@ -138,44 +140,33 @@ MONOSI = find_panels_capacity('monoSi', Surfaces_angles_areas, ModuleParameters)
 #merge all the info together so you get one dict
 Surfaces_Panel_info = Surfaces_angles_areas.append([HIT,CDTE,MONOSI])
 
-#%% 
-###SUB-QUESTION 3.2
 
-"""" Unfinished section, won't currently run, more testing in Jupyter Lab
+###SUB-QUESTION 3.2 - get the dc power outputs
 
- while building the function brackets notation marks things that will eventually need to be in a for loop, 
- so we only have to run the function once per solar panel type (HIT/CDTE/MONOSI)"""
+p_mp_values = pd.DataFrame(index = Eind_data.index)
 
-from pvlib.irradiance import get_total_irradiance,disc,dirint,dirindex,erbs,aoi
-from pvlib.solarposition import ephemeris
-from pvlib.atmosphere import get_relative_airmass,get_absolute_airmass
-from pvlib.clearsky import lookup_linke_turbidity,ineichen
-from pvlib.pvsystem import sapm_effective_irradiance, sapm
-from pvlib.temperature import sapm_cell
+for surface in Surfaces_angles_areas.columns:
+    for module in ['HIT', 'CdTe', 'monoSi']:
+        module_dc = get_DC_output(Eind_data, Surfaces_angles_areas, all_surface_POA_data, surface, module)
 
-def get_aoi_and_POAs(model:str, Surfaces_angles_areas:dict, location_data):
-    
-    #while building the function brackets notation marks things that will eventually need to be in a for loop, so we only have to run the function once per solar panel type (HIT/CDTE/MONOSI)
-    
-    surface_tilt = Surfaces_angles_areas['SurfaceASE']['tilt']
-    surface_azimuth = Surfaces_angles_areas['SurfaceASE']['orientation']
-    solar_zenith =  location_data.zenith
-    solar_azimuth = location_data.azimuth
-    
-    df_aoi = aoi(surface_tilt, surface_azimuth, solar_zenith, solar_azimuth)
-    
-    dni = location_data[model+"_DNI"] 
-    ghi = location_data.ghi
-    dhi = location_data.assign(dhi_from_dni = lambda df: df.ghi  - np.cos(np.deg2rad(df.zenith))*df[model+"_DNI"] )
-    
-    df_POAs = get_total_irradiance(surface_tilt, surface_azimuth, solar_zenith, solar_azimuth, dni, ghi, dhi)
-    df_aoi_POA = df_aoi.to_frame().merge(df_POAs, left_index=True, right_index=True, how= 'left')   
-    return df_aoi_POA
-    
-def get_DC_output(location:str, BUILDINGS_tilts_areas:dict):
-    
-    location_data = load_location_and_solar_angles(location)
-    df_aoi_POA = get_aoi_and_POAs(BUILDINGS_tilts_areas, location_data)
-    location_data = location_data.merge(df_aoi_POA, left_index=True, right_index=True, how= 'left')
-    return location_data
+        p_mp_values[module+surface+'_p_mp'] = module_dc[surface+'_p_mp']
 
+###SUB-QUESTION 3.3 - put annual yield into bar chart (annual yield = p_mp.sum() = sum of dc power)
+
+p_mp_sums = p_mp_values.sum(axis=0)
+
+module_yields = pd.DataFrame(columns = ['surface','module','annualyield'])
+
+module_yields['surface'] = BUILDINGS_df_update.columns.repeat(3)
+module_yields['module'] = ['HIT','CdTe', 'monoSi']*11
+module_yields['annualyield'] = p_mp_sums.values/1000
+
+#create the bar charts in either surface or module type groupings    
+create_bar_charts_DC_outputs_surface_groups(module_yields)
+create_bar_charts_DC_outputs_module_groups(module_yields)
+
+###SUB-QUESTION 3.4 - create a PV systems table (note its not dynamic, if we change the data we need to change this function)
+get_PV_systems_table(BUILDINGS_df_update, Surfaces_Panel_info)
+
+#%%
+"""Question 4"""

@@ -257,7 +257,120 @@ def find_panels_capacity(ModuleType:str, BUILDINGS_tilts_areas:pd.DataFrame, Mod
     
     return df
 
+def get_aoi(Surfaces_angles_areas:dict, location_data, surface):
+    
+    surface_tilt = Surfaces_angles_areas[surface]['tilt']
+    surface_azimuth = Surfaces_angles_areas[surface]['orientation']
+    solar_zenith =  location_data.zenith
+    solar_azimuth = location_data.azimuth
+    
+    sr_aoi = aoi(surface_tilt, surface_azimuth, solar_zenith, solar_azimuth)
+    return sr_aoi
+
+def get_sapm_effective(location_data, ModuleParameters, surface, module):
+    
+    poa_direct = location_data[surface+'_poa_direct']
+    poa_diffuse = location_data[surface+'_poa_diffuse']
+    airmass_absolute = location_data[surface+'_abs_airmass']
+    aoi = location_data[surface+'_aoi']
+    module = ModuleParameters[module]
+    
+    sapm_parameters = sapm_effective_irradiance(poa_direct, poa_diffuse, airmass_absolute, aoi, module)
+    return sapm_parameters
+
+def get_sapm_cell(location_data, ModuleParameters, surface, module):
+    
+    poa_global = location_data[surface+'_poa_global']
+    temp_air = location_data.temp
+    wind_speed = location_data.wind
+    a =  ModuleParameters[module]['A']
+    b =  ModuleParameters[module]['B']
+    deltaT = ModuleParameters[module]['DTC']
+    irrad_ref=1000.0
+    
+    sapm_cell_data = sapm_cell(poa_global, temp_air, wind_speed, a, b, deltaT, irrad_ref=1000.0)
+    return sapm_cell_data     
+
+###### FINAL FUNCTION FOR 3.2
 
 
+def get_DC_output(location_data:pd.DataFrame, Surfaces_angles_areas:dict, all_surface_POA_data, surface, module):
+    
+    apparent_zenith = location_data.apparent_zenith
+    #add the dhi, aoi to the location_data df.
+    sr_aoi = get_aoi(Surfaces_angles_areas, location_data, surface) 
+    sr_aoi.rename(surface+'_aoi', inplace = True)
+    location_data = location_data.assign(dhi_from_dni = lambda df: df.ghi  - np.cos(np.deg2rad(df.zenith))*df.dirindex_DNI)
+    location_data = location_data.merge(sr_aoi, left_index=True, right_index=True, how= 'left')
+    
+    # and relative and abs airmass
+    location_data[surface+'_rel_airmass'] = get_relative_airmass(apparent_zenith)
+    location_data[surface+'_abs_airmass'] =  get_absolute_airmass(location_data[surface+'_rel_airmass'])
+    
+    #add the POA data previously defined
+    location_data = location_data.merge(all_surface_POA_data.loc[:,[x for x in all_surface_POA_data.columns if surface in x]], left_index=True, right_index=True, how= 'left')
+    
+    #Load Module Parameters
+    ModuleParameters = load_ModuleParameters()
+    
+    #add the SAPM Effective Irradiance Output
+    sapm_eff_irr = (get_sapm_effective(location_data, ModuleParameters, surface, module))
+    location_data[surface+'_SAPM_eff_irr'] = sapm_eff_irr
+    
+    #add the SAPM Cell info
+    sapm_celltemp = get_sapm_cell(location_data, ModuleParameters, surface, module)
+    location_data[surface+'_SAPM_cell_temp'] = sapm_celltemp
+    
+    #calculate the power output
+    effective_irradiance =  location_data[surface+'_SAPM_eff_irr']
+    temp_cell = location_data[surface+'_SAPM_cell_temp']
+    module = ModuleParameters[module]
+    power_df = sapm(effective_irradiance, temp_cell, module)   
+    
+    location_data[surface+'_p_mp'] = power_df['p_mp']
+    
+    return location_data
 
+def create_bar_charts_DC_outputs_surface_groups(module_yields):
+    
+    sns.set_theme(style="whitegrid")
+    
+    # Draw a nested barplot by tilt and orientation
+    g = sns.catplot(
+        data = module_yields, kind="bar",
+        x="surface", y="annualyield", hue="module",
+        ci = None, palette="dark", alpha=0.6, height=6,
+    )
+    g.despine(left=True)
+    g.set_axis_labels('', "Annual Yield [kWh/m2]")
+    g.legend.set_title('Module Type')
+    g.set_xticklabels(rotation=90)
+    
+
+def create_bar_charts_DC_outputs_module_groups(module_yields):
+    
+    sns.set_theme(style="whitegrid")
+    
+    # Draw a nested barplot by tilt and orientation
+    g = sns.catplot(
+        data = module_yields, kind="bar",
+        x="module", y="annualyield", hue="surface",
+        ci = None, palette="dark", alpha=.6, height=6
+    )
+    g.despine(left=True)
+    g.set_axis_labels("Module", "Annual Yield [kWh/m2]")
+    g.legend.set_title(' ')
+
+def get_PV_systems_table(BUILDINGS_df_update, Surfaces_Panel_info):
+    
+    df = pd.DataFrame(columns = ['Surface', 'Best Module', 'Total Capacity', 'Tilt', 'Orientation'])
+    df['Surface'] = BUILDINGS_df_update.columns
+    df['Best Module'] = ('Mono Si')
+    Surfaces_Panel_info_transposed = Surfaces_Panel_info.transpose()
+    df['Total Capacity'] = Surfaces_Panel_info_transposed['Capacity_monoSi'].values.astype(int) 
+    df['Tilt'] = Surfaces_Panel_info_transposed['tilt'].values.astype(int) 
+    df['Orientation'] = Surfaces_Panel_info_transposed['orientation'].values.astype(int) 
+    df.set_index('Surface', inplace = True )
+
+    return df
 
