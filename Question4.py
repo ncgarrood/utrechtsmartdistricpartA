@@ -12,30 +12,32 @@ import pvlib
 import numpy as np
 import seaborn as sns
 
+#%%
+#Re-arange data to easier names and only MonoSi module
+from EBE_spyder_final import p_mp_values
+MonoSi_values = p_mp_values.drop(columns = ['HITSurfaceASE_p_mp', 'CdTeSurfaceASE_p_mp','HITSurfaceASW_p_mp', 'CdTeSurfaceASW_p_mp','HITSurfaceBE_p_mp', 'CdTeSurfaceBE_p_mp','HITSurfaceBS_p_mp', 'CdTeSurfaceBS_p_mp','HITSurfaceBW_p_mp', 'CdTeSurfaceBW_p_mp', 'HITRoofCS_p_mp', 'CdTeRoofCS_p_mp', 'HITRoofCN_p_mp', 'CdTeRoofCN_p_mp', 'HITRoofDW_p_mp', 'CdTeRoofDW_p_mp', 'HITRoofDE_p_mp', 'CdTeRoofDE_p_mp', 'HITRoofA_p_mp', 'CdTeRoofA_p_mp', 'HITRoofB_p_mp', 'CdTeRoofB_p_mp'])
+MonoSi_values = MonoSi_values.rename(columns = {'monoSiSurfaceASE_p_mp':'ASE',  'monoSiSurfaceASW_p_mp' : 'ASW','monoSiSurfaceBE_p_mp' : 'BE', 'monoSiSurfaceBS_p_mp' : 'BS', 'monoSiSurfaceBW_p_mp' : 'BW', 'monoSiRoofCS_p_mp' : 'CS', 'monoSiRoofCN_p_mp' : 'CN', 'monoSiRoofDW_p_mp' : 'DW', 'monoSiRoofDE_p_mp' : 'DE', 'monoSiRoofA_p_mp' : 'A', 'monoSiRoofB_p_mp' : 'B'})
 
-DC = pd.read_csv('Irradiance_2015_UPOT.csv', sep = ';', index_col = 'timestamp')
-DC = DC.temp_air
-
-Pac0 = 240
+#DC to AC conversion
+Pac0 = 280
 nnom = 0.96
-zeta = DC/(Pac0/nnom)
+zeta = MonoSi_values/(Pac0/nnom)
 eff = -0.0162*zeta-0.0059/zeta+0.9858
-AC = eff*DC
+Power_AC = (eff * MonoSi_values)
 
-def create_bar_charts(roof:str):
-    """Enter roof A or B and get the bar chart of it"""
-    sns.set_theme(style="whitegrid")
-    
-    #filter the POA_sums dataframe by roof A and roof B
-    POA_sums_RoofA_and_B = calculate_optimal_angles('dirindex', 'Eindhoven', SURFACES_TO_CALCULATE) #query on this, not optimal solution 
-    POA_totals = POA_sums_RoofA_and_B[POA_sums_RoofA_and_B['surface'] == roof]
-    
-    # Draw a nested barplot by tilt and orientation
-    q = sns.catplot(
-        data = POA_totals, kind="bar",
-        x="building surface", y="sum of POA global",
-        ci = None, palette="dark", alpha=.6, height=6
-    )
-    q.despine(left=True)
-    q.set(ylim=(0.8,1.3))
-    q.set_axis_labels("Building surface", "Sum of POA_global [MW/m2]")
+#Sum of AC
+Power_AC_sum = Power_AC.sum(axis = None)
+
+#Bar chart of sums
+New_colors_fr = ['red', 'red', 'red','red', 'red', 'blue','blue' ,'blue', 'blue',  'blue', 'blue']
+bar_AC = plt.bar(Power_AC_sum.index, Power_AC_sum, bottom = None,align='center', data = None, color = New_colors_fr)
+bar_AC = plt.title('Barchart of sum AC per surface orientation')
+bar_AC = plt.xlabel('Surface orientation')
+bar_AC = plt.ylabel('Sum of AC values in kWh/m2')
+
+colors = {'Facade':'red', 'Roof':'blue'}         
+labels = list(colors.keys())
+handles = [plt.Rectangle((0,0),1,1, color=colors[label]) for label in labels]
+plt.legend(handles, labels)
+
+plt.show(bar_AC)
