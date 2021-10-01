@@ -223,7 +223,7 @@ def create_bar_charts(roof:str):
     )
     g.despine(left=True)
     g.set(ylim=(800,1300))
-    g.set_axis_labels("Tilt [degrees]", "Sum of POA_global [kW/m2]")
+    g.set_axis_labels("Tilt [degrees]", "Sum of POA_global [kWh/m2]")
     g.legend.set_title('Orientation')
 
 """Question 3 Functions"""
