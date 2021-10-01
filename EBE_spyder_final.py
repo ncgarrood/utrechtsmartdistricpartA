@@ -37,6 +37,7 @@ from functions_for_EBE_spyder_final import (
 import pandas as pd
 import numpy as np
 import seaborn as sns
+import matplotlib.pyplot as plt
 
 #%%
 """Question 1"""
@@ -112,25 +113,24 @@ POA_total = all_surface_POA_data.loc[:,[x for x in all_surface_POA_data.columns 
 POA_total
 
 ###SUB-QUESTION 2.6
+poaglobal_sum = POA_total.sum(axis = None)
 
+poaglobal_sum = poaglobal_sum.rename(index = {'SurfaceASE_poa_global':'ASE',  'SurfaceASW_poa_global' : 'ASW','SurfaceBE_poa_global' : 'BE', 'SurfaceBS_poa_global' : 'BS', 'SurfaceBW_poa_global' : 'BW', 'RoofCS_poa_global' : 'CS', 'RoofCN_poa_global' : 'CN', 'RoofDW_poa_global' : 'DW', 'RoofDE_poa_global' : 'DE', 'RoofA_poa_global' : 'A', 'RoofB_poa_global' : 'B'})
 
+#New_colors = ['red', 'crimson', 'purple','mediumslateblue', 'blue', 'deepskyblue','springgreen' ,'green', 'lime',  'yellow', 'orange']
+New_colors_fr = ['peru', 'peru', 'peru','peru', 'peru', 'slategray','slategray' ,'slategray', 'slategray',  'slategray', 'slategray']
 
+bar_sum = plt.bar(poaglobal_sum.index, poaglobal_sum, color = New_colors_fr)
+bar_sum = plt.title('Barchart of sum POA global per surface orientation')
+bar_sum = plt.xlabel('Surface orientation')
+bar_sum = plt.ylabel('Sum of POA values in kWh/m2')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+colors = {'Façade':'peru', 'Roof':'slategray'}         
+labels = list(colors.keys())
+handles = [plt.Rectangle((0,0),1,1, color=colors[label]) for label in labels]
+plt.legend(handles, labels)
+plt.grid(axis = 'x')
+plt.show(bar_sum)
 
 # added a text string here of some ideas for this one, was quite lazy answering it, think we should add more
 """best is 135 orientation, 30 tilt for A, and 20 tilt for B
