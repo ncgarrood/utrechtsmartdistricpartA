@@ -215,7 +215,7 @@ def create_bar_charts(roof:str):
     POA_totals = POA_sums_RoofA_and_B[POA_sums_RoofA_and_B['surface'] == roof]
     
     # Draw a nested barplot by tilt and orientation
-    g = sns.catplot(df
+    g = sns.catplot(
         data = POA_totals, kind="bar",
         x="tilt", y="sum of POA global", hue="orientation",
         ci = None, palette="dark", alpha=.6, height=6
@@ -330,6 +330,7 @@ def get_DC_output(location_data:pd.DataFrame, Surfaces_angles_areas:dict, all_su
     
     return location_data
 
+#SUB QUESTION 3.3
 def create_bar_charts_DC_outputs_surface_groups(module_yields):
     
     sns.set_theme(style="whitegrid")
@@ -360,6 +361,61 @@ def create_bar_charts_DC_outputs_module_groups(module_yields):
     g.set_axis_labels("Module", "Annual Yield [kWh/m2]")
     g.legend.set_title(' ')
 
+def whole_facade_tables_charts(Eind_data, Surfaces_angles_areas, all_surface_POA_data, BUILDINGS_df_update):
+    
+    p_mp_values_wholefacade = pd.DataFrame(index = Eind_data.index)
+
+    for surface in Surfaces_angles_areas.columns:
+        for module in ['HIT', 'CdTe', 'monoSi']:
+            module_dc = get_DC_output(Eind_data, Surfaces_angles_areas, all_surface_POA_data, surface, module)
+
+            p_mp_values_wholefacade[module+surface+'_p_mp'] = module_dc[surface+'_p_mp']
+
+    p_mp_sums = p_mp_values_wholefacade.sum(axis=0)
+
+    module_yields = pd.DataFrame(columns = ['surface','module','Annual Yield [kW/m2]' ])
+
+    module_yields['surface'] = BUILDINGS_df_update.columns.repeat(3)
+    module_yields['module'] = ['HIT','CdTe', 'monoSi']*11
+    module_yields['Annual Yield [kW/m2]'] = (p_mp_sums.values/1000).astype(int)
+
+    Area_series = (Surfaces_angles_areas.loc['Area']).repeat(3)
+    Area_series.values
+
+    module_yields['Areas [m2]'] = Area_series.values.astype(int)
+    module_yields['Yield, Whole Facade [kW]'] = module_yields['Annual Yield [kW/m2]']*module_yields['Areas [m2]'].astype(int)
+    return module_yields
+
+def create_bar_charts_DC_outputs_surface_groups_whole(module_yields):
+    
+    sns.set_theme(style="whitegrid")
+    
+    # Draw a nested barplot by tilt and orientation
+    g = sns.catplot(
+        data = module_yields, kind="bar",
+        x="surface", y="Yield, Whole Facade [kW]", hue="module",
+        ci = None, palette="dark", alpha=0.6, height=6,
+    )
+    g.despine(left=True)
+    g.set_axis_labels('', "Annual Yield [kWh]")
+    g.legend.set_title('Module Type')
+    g.set_xticklabels(rotation=90)
+
+def create_bar_charts_DC_outputs_module_groups_whole(module_yields):
+    
+    sns.set_theme(style="whitegrid")
+    
+    # Draw a nested barplot by tilt and orientation
+    g = sns.catplot(
+        data = module_yields, kind="bar",
+        x="module", y="Yield, Whole Facade [kW]", hue="surface",
+        ci = None, palette="dark", alpha=.6, height=6
+    )
+    g.despine(left=True)
+    g.set_axis_labels("Module", "Annual Yield [kWh]")
+    g.legend.set_title(' ')
+
+
 def get_PV_systems_table(BUILDINGS_df_update, Surfaces_Panel_info):
     
     df = pd.DataFrame(columns = ['Surface', 'Best Module', 'Total Capacity', 'Tilt', 'Orientation'])
@@ -372,4 +428,3 @@ def get_PV_systems_table(BUILDINGS_df_update, Surfaces_Panel_info):
     df.set_index('Surface', inplace = True )
 
     return df
-
