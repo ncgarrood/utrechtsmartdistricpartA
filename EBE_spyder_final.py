@@ -98,7 +98,7 @@ ABdf = pd.DataFrame(data = AB, index = ['tilt', 'orientation'], columns = ["Roof
 
 #merge the roofA and roof B tilts and orientations to the BUILDINGS_df, called it BUILDINGS_df_update
 BUILDINGS_df = pd.DataFrame(BUILDINGS)
-BUILDINGS_df_update =  BUILDINGS_df.merge(ABdf, left_index=True, right_index=True, how = 'left')
+BUILDINGS_df_update = BUILDINGS_df.merge(ABdf, left_index=True, right_index=True, how = 'left')
 BUILDINGS_df_update
 
 #now we make the POA tables again, with the new info for Roof A and Roof B
@@ -203,7 +203,7 @@ MonoSi_values = p_mp_values.drop(columns = ['HITSurfaceASE_p_mp', 'CdTeSurfaceAS
 MonoSi_values = MonoSi_values.rename(columns = {'monoSiSurfaceASE_p_mp':'ASE',  'monoSiSurfaceASW_p_mp' : 'ASW','monoSiSurfaceBE_p_mp' : 'BE', 'monoSiSurfaceBS_p_mp' : 'BS', 'monoSiSurfaceBW_p_mp' : 'BW', 'monoSiRoofCS_p_mp' : 'CS', 'monoSiRoofCN_p_mp' : 'CN', 'monoSiRoofDW_p_mp' : 'DW', 'monoSiRoofDE_p_mp' : 'DE', 'monoSiRoofA_p_mp' : 'A', 'monoSiRoofB_p_mp' : 'B'})
 
 #DC to AC conversion
-Pac0 = 280
+Pac0 = 280 #capacity of MonoSi in parameters file
 nnom = 0.96
 zeta = MonoSi_values/(Pac0/nnom)
 eff = -0.0162*zeta-0.0059/zeta+0.9858
