@@ -136,7 +136,7 @@ plt.show(bar_sum)
 """best is 135 orientation, 30 tilt for A, and 20 tilt for B
 
 seems  plausible since when you compare RoofB with SurfaceCS and SurfaceBS (all same orientation):
-RoofB - tilt 20 - POA at 12.00 = 38
+RoofB - tilt 30 - POA at 12.00 = 38
 RoofCS - tilt 40 - POA at 12.00 = 35
 Surface BS - tilt 90 - POA at 12.00 = 24"""
 

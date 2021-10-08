@@ -181,8 +181,7 @@ def create_surfaces_POAs(model:str , location:str, BUILDINGS_df:pd.DataFrame) ->
         POA = calculate_POA_with_dirindex(location_data, surface, BUILDINGS_df .loc["tilt",surface], BUILDINGS_df.loc["orientation",surface])
         POA = POA.drop(['poa_sky_diffuse', 'poa_ground_diffuse'],axis=1)
         POA =  POA.rename(columns=dict(zip(POA.columns, [x.replace("poa",surface+"_poa") for x in POA.columns])))
-        df = pd.concat((df, POA), axis=1)
-        
+        df = pd.concat((df, POA), axis=1)        
     return df
 
 def calculate_optimal_angles(model:str , location:str, surfaces_to_calculate:dict) -> pd.DataFrame:
