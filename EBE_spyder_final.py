@@ -93,7 +93,7 @@ POA_sums_RoofB = POA_sums_RoofA_and_B.loc[lambda df: df['surface'] == "RoofB"]
 POA_sums_RoofB['sum of POA global'].max()
 
 # create a new DF of the optimum A and B tilts and orientations
-AB = [[max_a_row['tilt'], 20], [max_a_row['orientation'],180]]
+AB = [[max_a_row['tilt'], 30], [max_a_row['orientation'],180]]
 ABdf = pd.DataFrame(data = AB, index = ['tilt', 'orientation'], columns = ["RoofA", "RoofB"])
 
 #merge the roofA and roof B tilts and orientations to the BUILDINGS_df, called it BUILDINGS_df_update
