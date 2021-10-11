@@ -74,3 +74,26 @@ handles = [plt.Rectangle((0,0),1,1, color=colors[label]) for label in labels]
 plt.legend(handles, labels)
 
 plt.show(bar_sum)
+
+#%%
+
+from EBE_spyder_final import Power_AC_sum_total
+
+#prepare data add surfaces for buildings together
+BuildingA = Power_AC_sum_total.ASE + Power_AC_sum_total.ASW + Power_AC_sum_total.A
+BuildingB = Power_AC_sum_total.BE + Power_AC_sum_total.BW + Power_AC_sum_total.BS + Power_AC_sum_total.B
+BuildingC = Power_AC_sum_total.CS + Power_AC_sum_total.CN
+BuildingD = Power_AC_sum_total.DW + Power_AC_sum_total.DE
+AC_per_Building = pd.DataFrame(data = [BuildingA, BuildingB, BuildingC, BuildingD], index = ['A', 'B', 'C', 'D'])
+
+bar_Buildings = plt.bar(AC_per_Building.index, AC_per_Building, bottom = None,align='center', data = None, color = New_colors_fr)
+bar_Buildings = plt.title('Barchart of sum AC per Building')
+bar_Buildings = plt.xlabel('Building')
+bar_Buildings = plt.ylabel('Sum of AC values in kWh')
+
+colors = {'Facade':'red', 'Roof':'blue'}         
+labels = list(colors.keys())
+handles = [plt.Rectangle((0,0),1,1, color=colors[label]) for label in labels]
+plt.legend(handles, labels)
+
+plt.show(bar_Buildings)

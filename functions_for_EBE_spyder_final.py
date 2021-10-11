@@ -87,7 +87,7 @@ def load_location_and_solar_angles(location:str)-> pd.DataFrame:
     
     solar_angles = (
         ephemeris(location_data.index, LOCATIONS[location]["latitude"],  LOCATIONS[location]["longitude"], location_data.temp)
-        .loc[lambda df: df.elevation > 4.5]
+        .loc[lambda df: df.elevation > 10]
     )
     
     location_data = location_data.merge(solar_angles, left_index=True, right_index=True, how='right')
@@ -108,6 +108,7 @@ def find_dni(model:str, location: str)-> pd.Series:
         linke_turbidity = lookup_linke_turbidity(location_data.index, LOCATIONS[location]["latitude"],LOCATIONS[location]["longitude"])
         clearsky = ineichen(location_data.apparent_zenith, absolute_airmass, linke_turbidity, perez_enhancement=True)
         output = dirindex(location_data.ghi, clearsky['ghi'], clearsky['dni'], zenith=location_data.zenith, times=location_data.index)
+    # It is recommended that ghi_clearsky be calculated using the Ineichen clear sky model pvlib.clearsky.ineichen() with perez=True
     elif model == 'erbs':
         output = erbs(location_data.ghi,location_data.zenith, location_data.index).dni
     else: 
@@ -181,8 +182,7 @@ def create_surfaces_POAs(model:str , location:str, BUILDINGS_df:pd.DataFrame) ->
         POA = calculate_POA_with_dirindex(location_data, surface, BUILDINGS_df .loc["tilt",surface], BUILDINGS_df.loc["orientation",surface])
         POA = POA.drop(['poa_sky_diffuse', 'poa_ground_diffuse'],axis=1)
         POA =  POA.rename(columns=dict(zip(POA.columns, [x.replace("poa",surface+"_poa") for x in POA.columns])))
-        df = pd.concat((df, POA), axis=1)
-        
+        df = pd.concat((df, POA), axis=1)        
     return df
 
 def calculate_optimal_angles(model:str , location:str, surfaces_to_calculate:dict) -> pd.DataFrame:
@@ -221,8 +221,8 @@ def create_bar_charts(roof:str):
         ci = None, palette="dark", alpha=.6, height=6
     )
     g.despine(left=True)
-    g.set(ylim=(800,1300))
-    g.set_axis_labels("Tilt [degrees]", "Sum of POA_global [kW/m2]")
+    #g.set(ylim=(800,1300))
+    g.set_axis_labels("Tilt [degrees]", "Annual sum of POA global [kWh/m2]")
     g.legend.set_title('Orientation')
 
 """Question 3 Functions"""

@@ -93,12 +93,12 @@ POA_sums_RoofB = POA_sums_RoofA_and_B.loc[lambda df: df['surface'] == "RoofB"]
 POA_sums_RoofB['sum of POA global'].max()
 
 # create a new DF of the optimum A and B tilts and orientations
-AB = [[max_a_row['tilt'], 20], [max_a_row['orientation'],180]]
+AB = [[max_a_row['tilt'], 30], [max_a_row['orientation'],180]]
 ABdf = pd.DataFrame(data = AB, index = ['tilt', 'orientation'], columns = ["RoofA", "RoofB"])
 
 #merge the roofA and roof B tilts and orientations to the BUILDINGS_df, called it BUILDINGS_df_update
 BUILDINGS_df = pd.DataFrame(BUILDINGS)
-BUILDINGS_df_update =  BUILDINGS_df.merge(ABdf, left_index=True, right_index=True, how = 'left')
+BUILDINGS_df_update = BUILDINGS_df.merge(ABdf, left_index=True, right_index=True, how = 'left')
 BUILDINGS_df_update
 
 #now we make the POA tables again, with the new info for Roof A and Roof B
@@ -114,16 +114,15 @@ POA_total
 
 ###SUB-QUESTION 2.6
 poaglobal_sum = POA_total.sum(axis = None)
-
 poaglobal_sum = poaglobal_sum.rename(index = {'SurfaceASE_poa_global':'ASE',  'SurfaceASW_poa_global' : 'ASW','SurfaceBE_poa_global' : 'BE', 'SurfaceBS_poa_global' : 'BS', 'SurfaceBW_poa_global' : 'BW', 'RoofCS_poa_global' : 'CS', 'RoofCN_poa_global' : 'CN', 'RoofDW_poa_global' : 'DW', 'RoofDE_poa_global' : 'DE', 'RoofA_poa_global' : 'A', 'RoofB_poa_global' : 'B'})
+poaglobal_sum = poaglobal_sum/1000 #convert to kW
 
 #New_colors = ['red', 'crimson', 'purple','mediumslateblue', 'blue', 'deepskyblue','springgreen' ,'green', 'lime',  'yellow', 'orange']
 New_colors_fr = ['peru', 'peru', 'peru','peru', 'peru', 'slategray','slategray' ,'slategray', 'slategray',  'slategray', 'slategray']
 
 bar_sum = plt.bar(poaglobal_sum.index, poaglobal_sum, color = New_colors_fr)
-bar_sum = plt.title('Barchart of sum POA global per surface orientation')
-bar_sum = plt.xlabel('Surface orientation')
-bar_sum = plt.ylabel('Sum of POA values in kWh/m2')
+bar_sum = plt.xlabel('Surface')
+bar_sum = plt.ylabel('Sum of Total POA [kWh/m2]')
 
 colors = {'Façade':'peru', 'Roof':'slategray'}         
 labels = list(colors.keys())
@@ -136,7 +135,7 @@ plt.show(bar_sum)
 """best is 135 orientation, 30 tilt for A, and 20 tilt for B
 
 seems  plausible since when you compare RoofB with SurfaceCS and SurfaceBS (all same orientation):
-RoofB - tilt 20 - POA at 12.00 = 38
+RoofB - tilt 30 - POA at 12.00 = 38
 RoofCS - tilt 40 - POA at 12.00 = 35
 Surface BS - tilt 90 - POA at 12.00 = 24"""
 
@@ -198,11 +197,12 @@ PV_table
 """Question 4"""
 
 #4.1 AC modeling
+#Re-arange data to easier names and only MonoSi module
 MonoSi_values = p_mp_values.drop(columns = ['HITSurfaceASE_p_mp', 'CdTeSurfaceASE_p_mp','HITSurfaceASW_p_mp', 'CdTeSurfaceASW_p_mp','HITSurfaceBE_p_mp', 'CdTeSurfaceBE_p_mp','HITSurfaceBS_p_mp', 'CdTeSurfaceBS_p_mp','HITSurfaceBW_p_mp', 'CdTeSurfaceBW_p_mp', 'HITRoofCS_p_mp', 'CdTeRoofCS_p_mp', 'HITRoofCN_p_mp', 'CdTeRoofCN_p_mp', 'HITRoofDW_p_mp', 'CdTeRoofDW_p_mp', 'HITRoofDE_p_mp', 'CdTeRoofDE_p_mp', 'HITRoofA_p_mp', 'CdTeRoofA_p_mp', 'HITRoofB_p_mp', 'CdTeRoofB_p_mp'])
 MonoSi_values = MonoSi_values.rename(columns = {'monoSiSurfaceASE_p_mp':'ASE',  'monoSiSurfaceASW_p_mp' : 'ASW','monoSiSurfaceBE_p_mp' : 'BE', 'monoSiSurfaceBS_p_mp' : 'BS', 'monoSiSurfaceBW_p_mp' : 'BW', 'monoSiRoofCS_p_mp' : 'CS', 'monoSiRoofCN_p_mp' : 'CN', 'monoSiRoofDW_p_mp' : 'DW', 'monoSiRoofDE_p_mp' : 'DE', 'monoSiRoofA_p_mp' : 'A', 'monoSiRoofB_p_mp' : 'B'})
 
 #DC to AC conversion
-Pac0 = 280
+Pac0 = 280 #capacity of MonoSi in parameters file
 nnom = 0.96
 zeta = MonoSi_values/(Pac0/nnom)
 eff = -0.0162*zeta-0.0059/zeta+0.9858
@@ -232,3 +232,17 @@ handles = [plt.Rectangle((0,0),1,1, color=colors[label]) for label in labels]
 plt.legend(handles, labels)
 
 plt.show(bar_AC)
+
+#Barchart per building
+BuildingA = Power_AC_sum_total.ASE + Power_AC_sum_total.ASW + Power_AC_sum_total.A
+BuildingB = Power_AC_sum_total.BE + Power_AC_sum_total.BW + Power_AC_sum_total.BS + Power_AC_sum_total.B
+BuildingC = Power_AC_sum_total.CS + Power_AC_sum_total.CN
+BuildingD = Power_AC_sum_total.DW + Power_AC_sum_total.DE
+AC_per_Building = pd.DataFrame(data = [BuildingA, BuildingB, BuildingC, BuildingD], index = ['A', 'B', 'C', 'D'])
+
+bar_Buildings = plt.bar(AC_per_Building.index, AC_per_Building[0])
+bar_Buildings = plt.title('Barchart of sum AC per Building')
+bar_Buildings = plt.xlabel('Building')
+bar_Buildings = plt.ylabel('Sum of AC values in kWh')
+
+plt.show(bar_Buildings)
