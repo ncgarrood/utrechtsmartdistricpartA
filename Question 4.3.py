@@ -9,11 +9,15 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.dates import DateFormatter
 
 from EBE_spyder_final import (Power_AC, Area_per_surface)
 
 #4.3 plots of each building for 3 days: 23/4, 23/7 and 23/10
 Power_AC_total = Power_AC*Area_per_surface['Area']
+Power_AC_total = Power_AC_total/1000
+#ser = pd.to_datetime(Power_AC_total.index).to_series()
+#Power_AC_total.set_index(ser.apply(lambda d : d.time() ))
 
 x4 = Power_AC_total.loc['2019-04-23'].index
 x7 = Power_AC_total.loc['2019-07-23'].index
@@ -68,41 +72,92 @@ yDW7 = Power_AC_total.loc['2019-07-23'].DW
 yDE10 = Power_AC_total.loc['2019-10-23'].DE
 yDW10 = Power_AC_total.loc['2019-10-23'].DW
 
-fig, ((A_234, A_237, A_2310), (B_234, B_237, B_2310), (C_234, C_237, C_2310), (D_234, D_237, D_2310)) = plt.subplots(4, 3)
+dfmt = DateFormatter("%H") # proper formatting Year-month-day
+
+fig, ((A_234, A_237, A_2310), (B_234, B_237, B_2310), (C_234, C_237, C_2310), (D_234, D_237, D_2310)) = plt.subplots(4, 3, figsize=(10, 15))
 fig.suptitle('AC power per facsade per building per day')
 A_234.plot(x4, yA4)
 A_234.plot(x4, yASE4)
 A_234.plot(x4, yASW4)
+A_234.set_xlabel('time')
+A_234.set_ylabel('AC power (kW)')
+A_234.set_title('AC Power output of building A on 23 April 2019')
+A_234.xaxis.set_major_formatter(dfmt)
 A_237.plot(x7, yA7)
 A_237.plot(x7, yASE7)
 A_237.plot(x7, yASW7)
+A_237.set_xlabel('time')
+A_237.set_ylabel('AC power (kW)')
+A_237.set_title('AC Power output of building A on 23 July 2019')
+A_237.xaxis.set_major_formatter(dfmt)
 A_2310.plot(x10, yA10)
 A_2310.plot(x10, yASE10)
 A_2310.plot(x10, yASW10)
+A_2310.set_xlabel('time')
+A_2310.set_ylabel('AC power (kW)')
+A_2310.set_title('AC Power output of building A on 23 October 2019')
+A_2310.xaxis.set_major_formatter(dfmt)
 
 B_234.plot(x4, yB4)
 B_234.plot(x4, yBE4)
 B_234.plot(x4, yBS4)
 B_234.plot(x4, yBW4)
+B_234.set_xlabel('time')
+B_234.set_ylabel('AC power (kW)')
+B_234.set_title('AC Power output of building B on 23 April 2019')
+B_234.xaxis.set_major_formatter(dfmt)
 B_237.plot(x7, yB7)
 B_237.plot(x7, yBE7)
 B_237.plot(x7, yBS7)
 B_237.plot(x7, yBW7)
+B_237.set_xlabel('time')
+B_237.set_ylabel('AC power (kW)')
+B_237.set_title('AC Power output of building B on 23 July 2019')
+B_237.xaxis.set_major_formatter(dfmt)
 B_2310.plot(x10, yB10)
 B_2310.plot(x10, yBE10)
 B_2310.plot(x10, yBS10)
 B_2310.plot(x10, yBW10)
+B_2310.set_xlabel('time')
+B_2310.set_ylabel('AC power (kW)')
+B_2310.set_title('AC Power output of building B on 23 October 2019')
+B_2310.xaxis.set_major_formatter(dfmt)
 
 C_234.plot(x4, yCS4)
 C_234.plot(x4, yCN4)
+C_234.set_xlabel('time')
+C_234.set_ylabel('AC power (kW)')
+C_234.set_title('AC Power output of building C on 23 April 2019')
+C_234.xaxis.set_major_formatter(dfmt)
 C_237.plot(x7, yCS7)
 C_237.plot(x7, yCN7)
+C_237.set_xlabel('time')
+C_237.set_ylabel('AC power (kW)')
+C_237.set_title('AC Power output of building C on 23 July 2019')
+C_237.xaxis.set_major_formatter(dfmt)
 C_2310.plot(x10, yCS10)
 C_2310.plot(x10, yCN10)
+C_2310.set_xlabel('time')
+C_2310.set_ylabel('AC power (kW)')
+C_2310.set_title('AC Power output of building C on 23 Cctober 2019')
+C_2310.xaxis.set_major_formatter(dfmt)
 
 D_234.plot(x4, yDE4)
 D_234.plot(x4, yDW4)
+D_234.set_xlabel('time')
+D_234.set_ylabel('AC power (kW)')
+D_234.set_title('AC Power output of building D on 23 April 2019')
+A_234.xaxis.set_major_formatter(dfmt)
 D_237.plot(x7, yDE7)
 D_237.plot(x7, yDW7)
+D_237.set_xlabel('time')
+D_237.set_ylabel('AC power (kW)')
+D_237.set_title('AC Power output of building D on 23 July 2019')
+A_234.xaxis.set_major_formatter(dfmt)
 D_2310.plot(x10, yDE10)
 D_2310.plot(x10, yDW10)
+D_2310.set_xlabel('time')
+D_2310.set_ylabel('AC power (kW)')
+D_2310.set_title('AC Power output of building D on 23 October 2019')
+A_234.xaxis.set_major_formatter(dfmt)
+fig.tight_layout()
