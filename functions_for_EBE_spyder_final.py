@@ -247,7 +247,7 @@ def find_panels_capacity(ModuleType:str, BUILDINGS_tilts_areas:pd.DataFrame, Mod
     df = pd.DataFrame(columns = ['Surface', "Number_panels", "Capacity"])
     """Returns the capaicty and number of panels per surface as a dataframe"""
     for surface in BUILDINGS_tilts_areas:
-        Number_panels = (BUILDINGS_tilts_areas[surface]['Area']//ModuleParameters[ModuleType]['Area'])//ModuleParameters[ModuleType]['Cells_in_Series']
+        Number_panels = (BUILDINGS_tilts_areas[surface]['Area']//ModuleParameters[ModuleType]['Area'])
         Capacity = Number_panels*ModuleParameters[ModuleType]['Wp']
         df.loc[len(df)] = [surface, Number_panels, Capacity]
     df.rename({'Number_panels':'Number_panels_'+ModuleType, 'Capacity': 'Capacity_'+ModuleType}, axis = 1, inplace = True)
