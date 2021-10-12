@@ -179,62 +179,68 @@ create_bar_charts_DC_outputs_module_groups(module_yields_per_m2)
 
 ###SUB-QUESTION 3.4 - create a PV systems table (note its not dynamic, if we change the data we need to change this function)
 PV_table = get_PV_systems_table(BUILDINGS_df_update, Surfaces_Panel_info)
-PV_table
+PV_table['Total Capacity'] = round(PV_table['Total Capacity']/1000)
+
 
 #%%
 """Question 4"""
 
 #4.1 AC modeling
-#Re-arange data to easier names and only MonoSi module
-MonoSi_values = p_mp_values.drop(columns = ['HITSurfaceASE_p_mp', 'CdTeSurfaceASE_p_mp','HITSurfaceASW_p_mp', 'CdTeSurfaceASW_p_mp','HITSurfaceBE_p_mp', 'CdTeSurfaceBE_p_mp','HITSurfaceBS_p_mp', 'CdTeSurfaceBS_p_mp','HITSurfaceBW_p_mp', 'CdTeSurfaceBW_p_mp', 'HITRoofCS_p_mp', 'CdTeRoofCS_p_mp', 'HITRoofCN_p_mp', 'CdTeRoofCN_p_mp', 'HITRoofDW_p_mp', 'CdTeRoofDW_p_mp', 'HITRoofDE_p_mp', 'CdTeRoofDE_p_mp', 'HITRoofA_p_mp', 'CdTeRoofA_p_mp', 'HITRoofB_p_mp', 'CdTeRoofB_p_mp'])
-MonoSi_values = MonoSi_values.rename(columns = {'monoSiSurfaceASE_p_mp':'ASE',  'monoSiSurfaceASW_p_mp' : 'ASW','monoSiSurfaceBE_p_mp' : 'BE', 'monoSiSurfaceBS_p_mp' : 'BS', 'monoSiSurfaceBW_p_mp' : 'BW', 'monoSiRoofCS_p_mp' : 'CS', 'monoSiRoofCN_p_mp' : 'CN', 'monoSiRoofDW_p_mp' : 'DW', 'monoSiRoofDE_p_mp' : 'DE', 'monoSiRoofA_p_mp' : 'A', 'monoSiRoofB_p_mp' : 'B'})
+#Re-arange data to easier names and only HIT module
+HIT_values = p_mp_values.drop(columns = ['monoSiSurfaceASE_p_mp', 'CdTeSurfaceASE_p_mp','monoSiSurfaceASW_p_mp', 'CdTeSurfaceASW_p_mp','monoSiSurfaceBE_p_mp', 'CdTeSurfaceBE_p_mp','monoSiSurfaceBS_p_mp', 'CdTeSurfaceBS_p_mp','monoSiSurfaceBW_p_mp', 'CdTeSurfaceBW_p_mp', 'monoSiRoofCS_p_mp', 'CdTeRoofCS_p_mp', 'monoSiRoofCN_p_mp', 'CdTeRoofCN_p_mp', 'monoSiRoofDW_p_mp', 'CdTeRoofDW_p_mp', 'monoSiRoofDE_p_mp', 'CdTeRoofDE_p_mp', 'monoSiRoofA_p_mp', 'CdTeRoofA_p_mp', 'monoSiRoofB_p_mp', 'CdTeRoofB_p_mp'])
+HIT_values = HIT_values.rename(columns = {'HITSurfaceASE_p_mp':'ASE',  'HITSurfaceASW_p_mp' : 'ASW','HITSurfaceBE_p_mp' : 'BE', 'HITSurfaceBS_p_mp' : 'BS', 'HITSurfaceBW_p_mp' : 'BW', 'HITRoofCS_p_mp' : 'CS', 'HITRoofCN_p_mp' : 'CN', 'HITRoofDW_p_mp' : 'DW', 'HITRoofDE_p_mp' : 'DE', 'HITRoofA_p_mp' : 'A', 'HITRoofB_p_mp' : 'B'})
+
 
 #DC to AC conversion
-Pac0 = 280 #capacity of MonoSi in parameters file
+Pac0 = 240 #capacity of HIT in parameters file
 nnom = 0.96
-zeta = MonoSi_values/(Pac0/nnom)
+zeta = HIT_values/(Pac0/nnom)
 eff = -0.0162*zeta-0.0059/zeta+0.9858
-Power_AC = (eff * MonoSi_values)
+Power_AC = (eff * HIT_values)
 Power_AC[Power_AC < 0 ] = 0
 Power_AC[Power_AC > Pac0] = Pac0
 
-print(Power_AC.max())
-print(Power_AC.min())
-
 #4.2 bar chart of sums per surface
 #Sum of AC
-Power_AC_sum = Power_AC.sum(axis = None) #still in kWh per m2
+Surfaces_Panel_info_trans = Surfaces_Panel_info.transpose()
+Power_AC_sum = pd.Series(data=Power_AC.sum(axis = None), name = 'ACperModule') #still in Wh per MODULE
+Power_AC_sum = Power_AC_sum.to_frame(name = 'ACperModule')
+Power_AC_sum.index = Surfaces_Panel_info_trans.index
+Power_AC_sum['no. panels']  = Surfaces_Panel_info_trans['Number_panels_HIT']
+Power_AC_sum['ACperFacade'] = Power_AC_sum['no. panels']*Power_AC_sum['ACperModule']/1000 #now in kWh/facade
 
-Area_per_surface = np.transpose(Surfaces_angles_areas)
-Area_per_surface = Area_per_surface.drop(columns = ['tilt', 'orientation'])
-Area_per_surface = Area_per_surface.rename(index = {'SurfaceASE' : 'ASE', 'SurfaceASW' : 'ASW', 'SurfaceBE' : 'BE', 'SurfaceBS' : 'BS', 'SurfaceBW' : 'BW', 'RoofCS' : 'CS', 'RoofCN' : 'CN', 'RoofDW' : 'DW', 'RoofDE' : 'DE','RoofA' : 'A','RoofB' : 'B'})
-Power_AC_sum_total = Power_AC_sum.values * Area_per_surface['Area']
 
-#Bar chart of sums
-New_colors_fr = ['peru', 'peru', 'peru','peru', 'peru', 'slategray','slategray' ,'slategray', 'slategray',  'slategray', 'slategray']
 
-bar_AC = plt.bar(Power_AC_sum_total.index, Power_AC_sum_total, bottom = None,align='center', data = None, color = New_colors_fr)
-bar_AC = plt.title('Barchart of sum AC per surface orientation')
-bar_AC = plt.xlabel('Surface orientation')
-bar_AC = plt.ylabel('Sum of AC values in kWh')
+# Area_per_surface = np.transpose(Surfaces_angles_areas)
+# # Area_per_surface = Area_per_surface.drop(columns = ['tilt', 'orientation'])
+# # Area_per_surface = Area_per_surface.rename(index = {'SurfaceASE' : 'ASE', 'SurfaceASW' : 'ASW', 'SurfaceBE' : 'BE', 'SurfaceBS' : 'BS', 'SurfaceBW' : 'BW', 'RoofCS' : 'CS', 'RoofCN' : 'CN', 'RoofDW' : 'DW', 'RoofDE' : 'DE','RoofA' : 'A','RoofB' : 'B'})
 
-colors = {'Facade':'peru', 'Roof':'slategray'}         
-labels = list(colors.keys())
-handles = [plt.Rectangle((0,0),1,1, color=colors[label]) for label in labels]
-plt.legend(handles, labels)
 
-plt.show(bar_AC)
+# #Bar chart of sums
+# New_colors_fr = ['peru', 'peru', 'peru','peru', 'peru', 'slategray','slategray' ,'slategray', 'slategray',  'slategray', 'slategray']
 
-#Barchart per building
-BuildingA = Power_AC_sum_total.ASE + Power_AC_sum_total.ASW + Power_AC_sum_total.A
-BuildingB = Power_AC_sum_total.BE + Power_AC_sum_total.BW + Power_AC_sum_total.BS + Power_AC_sum_total.B
-BuildingC = Power_AC_sum_total.CS + Power_AC_sum_total.CN
-BuildingD = Power_AC_sum_total.DW + Power_AC_sum_total.DE
-AC_per_Building = pd.DataFrame(data = [BuildingA, BuildingB, BuildingC, BuildingD], index = ['A', 'B', 'C', 'D'])
+# bar_AC = plt.bar(Power_AC_sum_total.index, Power_AC_sum_total, bottom = None,align='center', data = None, color = New_colors_fr)
+# bar_AC = plt.title('Barchart of sum AC per surface orientation')
+# bar_AC = plt.xlabel('Surface orientation')
+# bar_AC = plt.ylabel('Sum of AC values in kWh')
 
-bar_Buildings = plt.bar(AC_per_Building.index, AC_per_Building[0])
-bar_Buildings = plt.title('Barchart of sum AC per Building')
-bar_Buildings = plt.xlabel('Building')
-bar_Buildings = plt.ylabel('Sum of AC values in kWh')
+# colors = {'Facade':'peru', 'Roof':'slategray'}         
+# labels = list(colors.keys())
+# handles = [plt.Rectangle((0,0),1,1, color=colors[label]) for label in labels]
+# plt.legend(handles, labels)
 
-plt.show(bar_Buildings)
+# plt.show(bar_AC)
+
+# #Barchart per building
+# BuildingA = Power_AC_sum_total.ASE + Power_AC_sum_total.ASW + Power_AC_sum_total.A
+# BuildingB = Power_AC_sum_total.BE + Power_AC_sum_total.BW + Power_AC_sum_total.BS + Power_AC_sum_total.B
+# BuildingC = Power_AC_sum_total.CS + Power_AC_sum_total.CN
+# BuildingD = Power_AC_sum_total.DW + Power_AC_sum_total.DE
+# AC_per_Building = pd.DataFrame(data = [BuildingA, BuildingB, BuildingC, BuildingD], index = ['A', 'B', 'C', 'D'])
+
+# bar_Buildings = plt.bar(AC_per_Building.index, AC_per_Building[0])
+# bar_Buildings = plt.title('Barchart of sum AC per Building')
+# bar_Buildings = plt.xlabel('Building')
+# bar_Buildings = plt.ylabel('Sum of AC values in kWh')
+
+# plt.show(bar_Buildings)
