@@ -11,10 +11,13 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter
 
-from EBE_spyder_final import (Power_AC, Area_per_surface)
+from EBE_spyder_final import (Power_AC, Surfaces_angles_areas)
 
+Area_per_surface = Surfaces_angles_areas.transpose()
+Area_per_surface = Area_per_surface.Area
+Area_per_surface = Area_per_surface.rename(index={'SurfaceASE': 'ASE', 'SurfaceASW': 'ASW', 'SurfaceBW': 'BW', 'SurfaceBE': 'BE', 'SurfaceBS': 'BS', 'RoofCS': 'CS', 'RoofCN': 'CN', 'RoofDE': 'DE', 'RoofDW': 'DW', 'RoofA': 'A', 'RoofB': 'B'})
 #4.3 plots of each building for 3 days: 23/4, 23/7 and 23/10
-Power_AC_total = Power_AC*Area_per_surface['Area']
+Power_AC_total = Power_AC*Area_per_surface
 Power_AC_total = Power_AC_total/1000
 
 
