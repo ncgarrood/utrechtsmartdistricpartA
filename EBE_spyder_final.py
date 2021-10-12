@@ -24,8 +24,7 @@ from functions_for_EBE_spyder_final import (
     #functions
     load_location_and_solar_angles, find_dni, compare_dni, create_utrecht_dni_scatters, create_surfaces_POAs, 
     calculate_optimal_angles, create_bar_charts, load_ModuleParameters, get_building_angles_areas, find_panels_capacity,
-    get_DC_output, create_bar_charts_DC_outputs_surface_groups, create_bar_charts_DC_outputs_module_groups, 
-    create_bar_charts_DC_outputs_module_groups_whole,  create_bar_charts_DC_outputs_surface_groups_whole, get_PV_systems_table, whole_facade_tables_charts,
+    get_DC_output, create_bar_charts_DC_outputs_module_groups, get_PV_systems_table, 
     
     #global variables
     MODELS, LOCATIONS, KEY_LIST, TILTS, ORIENTATIONS, BUILDINGS, SURFACES_TO_CALCULATE, BUILDING_SIZES,
@@ -177,21 +176,17 @@ for surface in Surfaces_angles_areas.columns:
 
 p_mp_sums = p_mp_values.sum(axis=0)
 
-module_yields = pd.DataFrame(columns = ['surface','module','annualyield'])
+surf_list = pd.Series(['Façade ASE','Façade ASW','Façade BE','Façade BS', 'Façade BW', 'Roof CS', 'Roof CN', 'Roof DW', 'Roof DE', 'Roof A', 'Roof B'])
+surf_list = surf_list.repeat(3)
 
-module_yields['surface'] = BUILDINGS_df_update.columns.repeat(3)
-module_yields['module'] = ['HIT','CdTe', 'monoSi']*11
+module_yields = pd.DataFrame( columns = ['surface','module','annualyield'])
+
+module_yields['surface'] = surf_list
+module_yields['module'] = ['HIT','CdTe', 'mono-Si']*11
 module_yields['annualyield'] = p_mp_sums.values/1000
-
 #create the bar charts in either surface or module type groupings    
-create_bar_charts_DC_outputs_surface_groups(module_yields)
+# create_bar_charts_DC_outputs_surface_groups(module_yields)
 create_bar_charts_DC_outputs_module_groups(module_yields)
-
-#re-create the bar charts in either surface or module type groupings but this time per whole facade, not /m2  
-module_yields_whole_facade = whole_facade_tables_charts(Eind_data, Surfaces_angles_areas, all_surface_POA_data, BUILDINGS_df_update)
-module_yields_whole_facade
-create_bar_charts_DC_outputs_module_groups_whole(module_yields_whole_facade)
-create_bar_charts_DC_outputs_surface_groups_whole(module_yields_whole_facade)
 
 ###SUB-QUESTION 3.4 - create a PV systems table (note its not dynamic, if we change the data we need to change this function)
 PV_table = get_PV_systems_table(BUILDINGS_df_update, Surfaces_Panel_info)
