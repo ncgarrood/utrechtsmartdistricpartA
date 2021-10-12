@@ -207,20 +207,56 @@ Power_AC_sum = pd.Series(data=Power_AC.sum(axis = None), name = 'ACperModule') #
 Power_AC_sum = Power_AC_sum.to_frame(name = 'ACperModule')
 Power_AC_sum.index = Surfaces_Panel_info_trans.index
 Power_AC_sum['no. panels']  = Surfaces_Panel_info_trans['Number_panels_HIT']
-Power_AC_sum['ACperFacade'] = Power_AC_sum['no. panels']*Power_AC_sum['ACperModule']/1000 #now in kWh/facade
+Power_AC_sum['ACperFacade'] = Power_AC_sum['no. panels']*Power_AC_sum['ACperModule']/10**6 #now in MWh/facade
+
+Power_AC_sum = Power_AC_sum.rename(index = {'SurfaceASE' : 'Façade ASE', 'SurfaceASW' : 'Façade ASW', 'SurfaceBE' : 'Façade BE', 'SurfaceBS' : 'Façade BS', 'SurfaceBW' : 'Façade BW', 'RoofCS' : 'Roof CS', 'RoofCN' : 'Roof CN', 'RoofDW' : 'Roof DW', 'RoofDE' : 'Roof DE','RoofA' : 'Roof A','RoofB' : 'Roof B'})
+Power_AC_sum['surface'] = Power_AC_sum.index
+
+def create_bar_charts_AC_facade(Power_AC_sum):
+    sns.set_theme(style="whitegrid")
+    
+    # Draw a nested barplot by tilt and orientation
+    g = sns.catplot(
+        data = Power_AC_sum, kind="bar",
+        x="surface", y="ACperFacade", hue=None,
+        ci = None, palette="dark", alpha=.6, height=6
+    )
+    g.despine(left=True)
+    g.set_axis_labels("Surface", "Annual AC Energy [MWh]")
 
 
+create_bar_charts_AC_facade(Power_AC_sum)
 
-# Area_per_surface = np.transpose(Surfaces_angles_areas)
-# # Area_per_surface = Area_per_surface.drop(columns = ['tilt', 'orientation'])
-# # Area_per_surface = Area_per_surface.rename(index = {'SurfaceASE' : 'ASE', 'SurfaceASW' : 'ASW', 'SurfaceBE' : 'BE', 'SurfaceBS' : 'BS', 'SurfaceBW' : 'BW', 'RoofCS' : 'CS', 'RoofCN' : 'CN', 'RoofDW' : 'DW', 'RoofDE' : 'DE','RoofA' : 'A','RoofB' : 'B'})
+ACA = Power_AC_sum['ACperFacade']['Façade ASE']+Power_AC_sum['ACperFacade']['Façade ASW']+Power_AC_sum['ACperFacade']['Roof A']
+ACB = Power_AC_sum['ACperFacade']['Façade BE']+Power_AC_sum['ACperFacade']['Façade BS']+Power_AC_sum['ACperFacade']['Roof B']
+ACC = Power_AC_sum['ACperFacade']['Roof CS']+Power_AC_sum['ACperFacade']['Roof CN']
+ACD = Power_AC_sum['ACperFacade']['Roof DE']+Power_AC_sum['ACperFacade']['Roof DW']
+Power_AC_sum_buildings = pd.DataFrame(index = ['Building A', 'Building B', 'Building C', 'Building D'] , columns = ['AC per Building'], data = [ACA,ACB,ACC,ACD] )
+
+Power_AC_sum_buildings['surface'] = Power_AC_sum_buildings.index
+
+def create_bar_charts_AC_building(Power_AC_sum_buildings):
+    sns.set_theme(style="whitegrid")
+    
+    # Draw a nested barplot by tilt and orientation
+    g = sns.catplot(
+        data = Power_AC_sum_buildings, kind="bar",
+        x="surface", y="AC per Building", hue=None,
+        ci = None, palette="dark", alpha=.6, height=6
+    )
+    g.despine(left=True)
+    g.set_axis_labels("", "Annual AC Energy [MWh]")
+
+
+create_bar_charts_AC_building(Power_AC_sum_buildings)
+
 
 
 # #Bar chart of sums
 # New_colors_fr = ['peru', 'peru', 'peru','peru', 'peru', 'slategray','slategray' ,'slategray', 'slategray',  'slategray', 'slategray']
 
 # bar_AC = plt.bar(Power_AC_sum_total.index, Power_AC_sum_total, bottom = None,align='center', data = None, color = New_colors_fr)
-# bar_AC = plt.title('Barchart of sum AC per surface orientation')
+# bar_AC = plt.title('Barchart of sum AC per surface')
 # bar_AC = plt.xlabel('Surface orientation')
 # bar_AC = plt.ylabel('Sum of AC values in kWh')
 
