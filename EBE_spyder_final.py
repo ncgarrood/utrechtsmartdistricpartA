@@ -174,19 +174,8 @@ for surface in Surfaces_angles_areas.columns:
 
 ###SUB-QUESTION 3.3 - put annual yield into bar chart (annual yield = p_mp.sum() = sum of dc power)
 
-p_mp_sums = p_mp_values.sum(axis=0)
-
-surf_list = pd.Series(['Façade ASE','Façade ASW','Façade BE','Façade BS', 'Façade BW', 'Roof CS', 'Roof CN', 'Roof DW', 'Roof DE', 'Roof A', 'Roof B'])
-surf_list = surf_list.repeat(3)
-
-module_yields = pd.DataFrame( columns = ['surface','module','annualyield'])
-
-module_yields['surface'] = surf_list
-module_yields['module'] = ['HIT','CdTe', 'mono-Si']*11
-module_yields['annualyield'] = p_mp_sums.values/1000
-#create the bar charts in either surface or module type groupings    
-# create_bar_charts_DC_outputs_surface_groups(module_yields)
-create_bar_charts_DC_outputs_module_groups(module_yields)
+module_yields_per_m2 = pd.read_excel("annualyieldpermodule.xlsx")
+create_bar_charts_DC_outputs_module_groups(module_yields_per_m2)
 
 ###SUB-QUESTION 3.4 - create a PV systems table (note its not dynamic, if we change the data we need to change this function)
 PV_table = get_PV_systems_table(BUILDINGS_df_update, Surfaces_Panel_info)
