@@ -211,7 +211,11 @@ nnom = 0.96
 zeta = MonoSi_values/(Pac0/nnom)
 eff = -0.0162*zeta-0.0059/zeta+0.9858
 Power_AC = (eff * MonoSi_values)
+Power_AC[Power_AC < 0 ] = 0
+Power_AC[Power_AC > Pac0] = Pac0
 
+print(Power_AC.max())
+print(Power_AC.min())
 
 #4.2 bar chart of sums per surface
 #Sum of AC
