@@ -134,6 +134,27 @@ def create_bar_sum_poa_each_facade(POA_total):
     
 create_bar_sum_poa_each_facade(POA_total)
 
+#%% alternative option for 2.6
+
+POA_surface = pd.read_excel("2.6 bar.xlsx")
+
+def create_bar_charts_DC_outputs_module_groups(POA_surface):
+    
+    sns.set_theme(style="whitegrid")
+    
+    # Draw a nested barplot by tilt and orientation
+    g = sns.catplot(
+        data = POA_surface, kind="bar",
+        x="Surface", y="SumPOA", hue=None,
+        ci = None, palette="dark", alpha=.6, height=6
+    )
+    g.despine(left=True)
+    g.set_axis_labels("Surface", "Annual Irradiance [kWh/m2]")
+    g.set_xticklabels(rotation=90)
+    
+create_bar_charts_DC_outputs_module_groups(POA_surface)
+#%%
+
 # added a text string here of some ideas for this one, was quite lazy answering it, think we should add more
 """best is 135 orientation, 30 tilt for A, and 20 tilt for B
 
