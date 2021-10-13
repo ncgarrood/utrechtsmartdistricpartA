@@ -149,7 +149,7 @@ def create_bar_charts_DC_outputs_module_groups(POA_surface):
         ci = None, palette="dark", alpha=.6, height=6
     )
     g.despine(left=True)
-    g.set_axis_labels("Surface", "Annual Irradiance [kWh/m2]")
+    g.set_axis_labels("", "Annual Irradiance [kWh/m2]")
     g.set_xticklabels(rotation=90)
     
 create_bar_charts_DC_outputs_module_groups(POA_surface)
@@ -244,7 +244,8 @@ def create_bar_charts_AC_facade(Power_AC_sum):
         ci = None, palette="dark", alpha=.6, height=6
     )
     g.despine(left=True)
-    g.set_axis_labels("Surface", "Annual AC Energy [MWh]")
+    g.set_xticklabels(rotation=90)
+    g.set_axis_labels("", "Annual AC Energy [MWh]")
 
 
 create_bar_charts_AC_facade(Power_AC_sum)
@@ -268,6 +269,7 @@ def create_bar_charts_AC_building(Power_AC_sum_buildings):
         ci = None, palette="dark", alpha=.6, height=6
     )
     g.despine(left=True)
+    
     g.set_axis_labels("", "Annual AC Energy [MWh]")
 
 

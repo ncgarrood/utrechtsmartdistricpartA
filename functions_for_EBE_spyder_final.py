@@ -139,10 +139,10 @@ def create_utrecht_dni_scatters():
     #formatting
     fig.subplots_adjust(wspace = 0.2, hspace = 0.3)
     
-    colours = ['black', 'dimgray', 'maroon', 'red']
+    colours = ['#5975a4', '#cc8963', '#5f9e6e', '#b55d60']
     
     for index, model in enumerate(MODELS):
-       
+        
         dotsize = 0.0005
         colour = colours[index]
         modelled_dni_scatter = find_dni(model,'Utrecht')
@@ -153,7 +153,7 @@ def create_utrecht_dni_scatters():
         subplot.set_ylim(0,1000)
         subplot.set(xlabel='Observed DNI [W/m2]', ylabel='Modelled DNI [W/m2]')
         subplot.plot([0,999],[0,999], c = 'gray', linewidth = 1)
-        
+        subplot.grid(b=None)
     
 
 """Question 2 Functions"""
