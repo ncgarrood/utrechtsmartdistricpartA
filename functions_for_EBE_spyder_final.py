@@ -27,8 +27,8 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 LOCATIONS = {
     "Utrecht":{
-        "latitude": 52.08746136865645,
-        "longitude": 5.168080610130638,
+        "latitude": 52.0845,
+        "longitude": 5.1751,
         "filename":"Irradiance_2015_UPOT.csv"
     },
     "Eindhoven":{
@@ -133,18 +133,28 @@ def compare_dni(model, true_value, predicted_value):
      print_errors(model,rmse,mbe,mae,r2)
 
 def create_utrecht_dni_scatters():
-    fig, axs = plt.subplots(2, 2,figsize = (12,7))
+    
+    fig, axs = plt.subplots(2, 2,figsize = (7,4))
+
     #formatting
     fig.subplots_adjust(wspace = 0.2, hspace = 0.3)
-
+    
+    colours = ['black', 'dimgray', 'maroon', 'red']
+    
     for index, model in enumerate(MODELS):
+       
+        dotsize = 0.0005
+        colour = colours[index]
         modelled_dni_scatter = find_dni(model,'Utrecht')
         subplot = axs[index//2][index % 2]
-        subplot.scatter(modelled_dni_scatter.DNI, modelled_dni_scatter[model+"_DNI"], s=0.001, c= 'lightcoral')
+        subplot.scatter(modelled_dni_scatter.DNI, modelled_dni_scatter[model+"_DNI"], s = dotsize, c= colour)
         subplot.set_title(model.upper())
+        subplot.set_xlim(0,1000)
+        subplot.set_ylim(0,1000)
         subplot.set(xlabel='Observed DNI [W/m2]', ylabel='Modelled DNI [W/m2]')
         subplot.plot([0,999],[0,999], c = 'gray', linewidth = 1)
-
+        
+    
 
 """Question 2 Functions"""
 
@@ -221,9 +231,10 @@ def create_bar_charts(roof:str):
         ci = None, palette="dark", alpha=.6, height=6
     )
     g.despine(left=True)
+    g.figsize = (7,4)
     #g.set(ylim=(800,1300))
-    g.set_axis_labels("Tilt [degrees]", "Annual sum of POA global [kWh/m2]")
-    g.legend.set_title('Orientation')
+    g.set_axis_labels("Tilt [°]", "Annual sum of POA global [kWh/m2]")
+    g.legend.set_title('Orientation [°]')
 
 """Question 3 Functions"""
 
